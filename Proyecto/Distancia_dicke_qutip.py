@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar 19 11:35:42 2024
+Created on Sat May 11 20:27:23 2024
 
 @author: juanjo
 """
@@ -16,9 +16,9 @@ import qutip as q
 # Generamos el hamiltoniano y los operadores de salto
 N = 2
 sigma = 1.0
-w = 4.0*sigma*N
-k = 4.0*sigma*N
-g = 5.0*sigma*N
+w = 0.1*sigma
+k = 0.5*sigma
+g = 0.1*sigma
 params = [sigma, w, k, g]
 H, J = dicke.dicke(N, params)
 
@@ -29,21 +29,27 @@ d0, ini = dicke.densidad(N)
 
 # Sacamos el lindbladiano y lo diagonalizamos
 L, b = general.Limblad(H, [J])
-todo = L.eigenvects()
-todoh = (L.H).eigenvects()
-vals = np.array([tup[0] for tup in todo], dtype = complex)
+L = np.matrix(L, dtype = complex)
+# Diagonalizamos
+Lq = q.Qobj(L)
+Lqh = q.Qobj(L.H)
+todo = Lq.eigenstates(sparse = False, sort = 'high')
+todoh = Lqh.eigenstates(sparse = False, sort = 'high')
+vals = todo[0]
 
 # autoMatrices derecha
-r = [np.asarray(tup[2], dtype = complex) for tup in todo]
-r = [np.squeeze(np.asarray(elemento, dtype = complex)) for elemento in r]
-r = [elemento/np.linalg.norm(elemento) for elemento in r]
-r = [np.reshape(elemento, (d0.shape[0], d0.shape[1])) for elemento in r]
+r = [np.reshape(elemento, d0.shape) for elemento in todo[1]]
+#r = [np.asarray(tup[2], dtype = complex) for tup in todo]
+#r = [np.squeeze(np.asarray(elemento, dtype = complex)) for elemento in r]
+#r = [elemento/np.linalg.norm(elemento) for elemento in r]
+#r = [np.reshape(elemento, (d0.shape[0], d0.shape[1])) for elemento in r]
 
 # automatrices izquierda
-l = [np.asarray(tup[2], dtype = complex) for tup in todoh]
-l = [np.squeeze(np.asarray(elemento, dtype = complex)) for elemento in l]
-l = [elemento/np.linalg.norm(elemento) for elemento in l]
-l = [np.reshape(elemento, (d0.shape[0], d0.shape[1])) for elemento in l]
+l = [np.reshape(elemento, d0.shape) for elemento in todoh[1]]
+#l = [np.asarray(tup[2], dtype = complex) for tup in todoh]
+#l = [np.squeeze(np.asarray(elemento, dtype = complex)) for elemento in l]
+#l = [elemento/np.linalg.norm(elemento) for elemento in l]
+#l = [np.reshape(elemento, (d0.shape[0], d0.shape[1])) for elemento in l]
 
 # Sacamos Mpemba1 y Mpemba2
 U2, U_cambio = general.Mpemba2_mejorada(L, l, vals, d0, N, ini)
@@ -55,6 +61,7 @@ segundo_maximo, indice_segundo_maximo = general.buscar_segundo_maximo(list(np.re
 L1 = l[indice_segundo_maximo]
 posibles, traza = general.buscar_angulos(L1, d0, N)
 theta, phi = posibles[traza.index(min(traza))]
+#theta, phi = posibles[0]
 U3 = general.Mpemba_sep(theta, phi, N)
 d0_exp3 = np.dot(np.dot(U3, d0), np.conjugate(U3.T))
 
@@ -65,7 +72,7 @@ d0_exp2 = np.dot(np.dot(U2, d0), np.conjugate(U2.T))
 #d0_exp2 = d0_exp2/np.trace(d0_exp2)
 
 # Calculamos la solucion
-tiempo = np.linspace(0, 20, 1000)
+tiempo = np.linspace(0, 500, 1000)
 v1 = general.solucion(d0, r, l, vals, tiempo)
 v2 = general.solucion(d0_exp1, r, l, vals, tiempo)
 v3 = general.solucion(d0_exp2, r, l, vals, tiempo)
@@ -82,7 +89,7 @@ est = general.estacionario_q(H, [J])
 #m = 0
 ob = [[np.sqrt(np.trace(np.dot(np.conjugate((v[i] - est).T), (v[i] - est)))) for i in range(len(v))] for v in dens]
 plt.plot(tiempo, ob[0], 'b-', label = 'Random')
-#plt.plot(tiempo, ob[1], 'r-', label = 'Mpemba_cero')
+plt.plot(tiempo, ob[1], 'r-', label = 'Mpemba_cero')
 plt.plot(tiempo, ob[2], 'g-', label = 'Mpemba_nocero')
 plt.plot(tiempo, ob[3], 'y-', label = 'Mpemba_ang')
 #plt.xlim(0, 10)

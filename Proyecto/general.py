@@ -10,6 +10,7 @@ import sympy as sp
 import scipy as sc
 import matplotlib.pyplot as plt
 import random as random
+import qutip as q
 
 # Funcion que me hace el producto de kronecker de las matrices identidad y ponemos en la posicion pos una matriz dada
 def kronecker(matriz, pos, n):
@@ -370,27 +371,20 @@ def buscar_segundo_maximo(lista):
 # Funcion que nos calcula la transformacion de Mpemba2, pero teniendo en cuenta la matriz de cambio de base
 def Mpemba2_mejorada(L, L_e, vals, d, N, ini):
   iden = np.matrix([[1.0, 0.0], [0.0, 1.0]], dtype = complex)
-
-    
+  
   # Extraemos la matriz por la izquierda cuyo autovalor es el mayor (y no es cero)
-  """
-  lista_vals =  list(np.real(np.array(vals, dtype = complex)))
-  maximo = max(lista_vals)
-  indice_maximo = lista_vals.index(maximo)
-  lista_vals.remove(maximo)
-  segundo_maximo = max(lista_vals)
-  indice_segundo_maximo = lista_vals.index(segundo_maximo)
-  if indice_segundo_maximo >= indice_maximo:
-    indice_segundo_maximo += 1
-  """
-  #segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo(list(np.real(vals)))
+  
+  # segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo(list(np.real(vals)))
   segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo([np.real(elemento) for elemento in vals])
+  print('Autovalores', vals)
+  print('Segundo maximo', segundo_maximo)
   #indice_segundo_maximo = vals.index(segundo_maximo)
   print('Indice segundo maximo: ' + str(indice_segundo_maximo))
+  
   # La pasamos a matriz
   L1 = np.reshape(L_e[indice_segundo_maximo], (d.shape[0], d.shape[1]))
   L1 = sp.Matrix(L1, dtype = complex)
-  print('Autovalor asociado al l1: ' + str(vals[indice_segundo_maximo]))
+  print('Autovalor asociado al l1: ', L1)
 
   # Diagonalizamos la matriz L1
   todo = L1.eigenvects()
@@ -404,15 +398,14 @@ def Mpemba2_mejorada(L, L_e, vals, d, N, ini):
   base_aux = generar_base_ortonormal(ini, int(2**N))
 
   base_aux = np.array([elemento for elemento in base_aux], dtype = complex)
+  
   # Con esto, podemos generar la primera transformacion
   U_cambio = ketbra(autovects[0], base_aux[0])
   for i in range(1, N):
     U_cambio += ketbra(autovects[i], base_aux[i])
 
-  #autovals = eliminar_duplicados(autovals)
-  tol = 1e-16
-  es_cero = [(np.abs(autovals[i]) < tol) for i in range(len(autovals))]
-  #es_cero = [np.allclose(np.abs(elemento), 0.0) for elemento in autovals]
+  #tol = 1e-16
+  es_cero = [(np.allclose(np.abs(autovals[i]), 0, atol = 1e-5)) for i in range(len(autovals))]
 
   print('Vamos a probar la via del no cero')
   # Se coje una pareja de autovalores con signo contrario
@@ -429,8 +422,9 @@ def Mpemba2_mejorada(L, L_e, vals, d, N, ini):
     s = np.arctan(np.sqrt((np.abs(autovals[indice_inicial]))/(np.abs(autovals[indice_contrario]))))
     print("La s me sale: " + str(s) + ' se ha cogido la s que sale de los autovalores: ')
     #print((autovals[indice_inicial], autovals[indice_contrario]))
+    print(F)
     identidad = kronecker(iden, 0, N)
-    U = identidad + (np.cos(s) - 1.0)*(np.dot(F, F)) - 1.j*F
+    U = identidad + (np.cos(s) - 1.0)*(np.dot(np.conjugate(F.T), F)) - 1.j*np.sin(s)*F
   else:
     print('No se puede coger la vía del no cero')
     U = np.zeros(d.shape)
@@ -454,17 +448,7 @@ def estacionario_bueno(vals, vects_r, vects_l, d):
 # Funcion que genera la transformacion de Mpemba1, pero haciendo antes lo de la matriz de cambio de base
 def Mpemba1_mejorada(L, L_e, autovals, d, N, ini):
 
-  # Extraemos la matriz por la izquierda cuyo autovalor es el mayor (y no es cero)
-  """
-  lista_vals =  list(np.real(autovals))
-  maximo = max(lista_vals)
-  indice_maximo = lista_vals.index(maximo)
-  lista_vals.remove(maximo)
-  segundo_maximo = max(lista_vals)
-  indice_segundo_maximo = lista_vals.index(segundo_maximo)
-  if indice_segundo_maximo >= indice_maximo:
-    indice_segundo_maximo += 1
-  """
+  # Se obtiene el segundo autovalor con la parte real mayor
   segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo(list(np.real(autovals)))
 
   # Hacemos reshape
@@ -488,7 +472,7 @@ def Mpemba1_mejorada(L, L_e, autovals, d, N, ini):
 
   # Ahora, tenemos que dividir en dos caminos, definimos una tolerancia
   #tol = 1.0e-14
-  es_cero = [(np.allclose(np.abs(vals[i]), 0.0)) for i in range(len(vals))]
+  es_cero = [(np.allclose(np.abs(vals[i]), 0.0, atol = 1e-2)) for i in range(len(vals))]
 
   if(any(es_cero)):
     print('Se puede hacer la vía del cero, con el autovalor: ')
@@ -515,11 +499,11 @@ def Mpemba_sep(theta, phi, N):
   # Construimos el operador sz
   #spin_z = kronecker(0.5*sz, 0, N)
   #spin_y = kronecker(0.5*sy, 0, N)
-  spin_z = kronecker(sz, 0, N)
-  spin_y = kronecker(sy, 0, N)
-  id = np.eye(spin_y.shape[0], spin_y.shape[1])
-  U1 = np.cos(0.5*phi)*id + 1.j*np.sin(0.5*phi)*spin_z
-  U2 = np.cos(0.5*theta)*id + 1.j*np.sin(0.5*theta)*spin_y
+  spin_z = kronecker(0.5*sz, 0, N)
+  spin_y = kronecker(0.5*sy, 0, N)
+  iden = np.eye(spin_y.shape[0], spin_y.shape[1])
+  U1 = np.cos(0.5*phi)*iden + 1.j*np.sin(0.5*phi)*spin_z
+  U2 = np.cos(0.5*theta)*iden + 1.j*np.sin(0.5*theta)*spin_y
   #U1 = exponencial_matriz(0.5*1.j*phi*spin_z)
   #U2 = exponencial_matriz(0.5*1.j*theta*spin_y)
   res = np.dot(U1, U2)
@@ -529,8 +513,8 @@ def Mpemba_sep(theta, phi, N):
     spin_y = kronecker(0.5*sy, i, N)
     #U1 = exponencial_matriz(0.5*1.j*phi*spin_z)
     #U2 = exponencial_matriz(0.5*1.j*theta*spin_y)
-    U1 = np.cos(0.5*phi)*id + 1.j*np.sin(0.5*phi)*spin_z
-    U2 = np.cos(0.5*theta)*id + 1.j*np.sin(0.5*theta)*spin_y
+    U1 = np.cos(0.5*phi)*iden + 1.j*np.sin(0.5*phi)*spin_z
+    U2 = np.cos(0.5*theta)*iden + 1.j*np.sin(0.5*theta)*spin_y
     res = np.dot(res, np.dot(U1, U2))
     i += 1
   return res
@@ -570,4 +554,7 @@ def buscar_angulos(L1, d0, N):
     
     return posibles, traza
 
-# Funcion que me permite ver si L2 es hermítica
+# Funcion que me obtiene el estado estacionario con qutip (a ver si esta es la buena)
+def estacionario_q(H, list_J):
+    r = q.steadystate(q.Qobj(H), [q.Qobj(J) for J in list_J], sparse = False)
+    return r.full()

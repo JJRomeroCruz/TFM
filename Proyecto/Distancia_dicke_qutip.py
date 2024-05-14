@@ -16,14 +16,16 @@ import qutip as q
 # Generamos el hamiltoniano y los operadores de salto
 N = 2
 sigma = 1.0
-w = 0.1*sigma
-k = 0.5*sigma
-g = 0.1*sigma
+w = 1.0*sigma
+k = 1.0*sigma
+#g = 0.5*np.sqrt(2)*sigma
+g = 0.6*(1/np.sqrt(N) + 1)*np.sqrt(2)*sigma
+#g = 1.0*sigma
 params = [sigma, w, k, g]
 H, J = dicke.dicke(N, params)
 
 # Matriz densidad inicial y vector inicial
-d0, ini = dicke.densidad(N)
+d0, ini = dicke.densidad2(N)
 #ini = np.eye(N*N)[0]
 #d0 = general.ketbra(ini, ini)
 
@@ -33,8 +35,8 @@ L = np.matrix(L, dtype = complex)
 # Diagonalizamos
 Lq = q.Qobj(L)
 Lqh = q.Qobj(L.H)
-todo = Lq.eigenstates(sparse = False, sort = 'high')
-todoh = Lqh.eigenstates(sparse = False, sort = 'high')
+todo = Lq.eigenstates(sparse = False, sort = 'high', eigvals = 2)
+todoh = Lqh.eigenstates(sparse = False, sort = 'high', eigvals = 2)
 vals = todo[0]
 
 # autoMatrices derecha
@@ -72,7 +74,7 @@ d0_exp2 = np.dot(np.dot(U2, d0), np.conjugate(U2.T))
 #d0_exp2 = d0_exp2/np.trace(d0_exp2)
 
 # Calculamos la solucion
-tiempo = np.linspace(0, 500, 1000)
+tiempo = np.linspace(0, 50, 1000)
 v1 = general.solucion(d0, r, l, vals, tiempo)
 v2 = general.solucion(d0_exp1, r, l, vals, tiempo)
 v3 = general.solucion(d0_exp2, r, l, vals, tiempo)

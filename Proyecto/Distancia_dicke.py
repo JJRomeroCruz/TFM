@@ -11,14 +11,17 @@ import matplotlib.pyplot as plt
 import dicke
 import general
 import qutip as q
+import random as random
 
 """ Vamos a sacar la distancia de Hilbert Schmidt """
 # Generamos el hamiltoniano y los operadores de salto
-N = 2
+N = 3
 sigma = 1.0
-w = 4.0*sigma*N
-k = 4.0*sigma*N
-g = 5.0*sigma*N
+w = 1.0*sigma
+k = 1.0*sigma
+#g = 0.5*np.sqrt(2)*sigma
+g = (1/np.sqrt(N) + 1)*np.sqrt(2)*sigma
+#g = 1.0*sigma
 params = [sigma, w, k, g]
 H, J = dicke.dicke(N, params)
 
@@ -55,8 +58,10 @@ segundo_maximo, indice_segundo_maximo = general.buscar_segundo_maximo(list(np.re
 L1 = l[indice_segundo_maximo]
 posibles, traza = general.buscar_angulos(L1, d0, N)
 theta, phi = posibles[traza.index(min(traza))]
+#theta, phi = sorted(posibles[random.randint(0, len(posibles)-1)])
 U3 = general.Mpemba_sep(theta, phi, N)
 d0_exp3 = np.dot(np.dot(U3, d0), np.conjugate(U3.T))
+print(min(traza))
 
 
 # Sacamos la matriz inicial con cada transformacion
@@ -65,7 +70,7 @@ d0_exp2 = np.dot(np.dot(U2, d0), np.conjugate(U2.T))
 #d0_exp2 = d0_exp2/np.trace(d0_exp2)
 
 # Calculamos la solucion
-tiempo = np.linspace(0, 20, 1000)
+tiempo = np.linspace(0, 200, 1000)
 v1 = general.solucion(d0, r, l, vals, tiempo)
 v2 = general.solucion(d0_exp1, r, l, vals, tiempo)
 v3 = general.solucion(d0_exp2, r, l, vals, tiempo)

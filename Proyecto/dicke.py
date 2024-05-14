@@ -48,7 +48,9 @@ def dicke(N, params):
 def densidad(N):
   sz = np.matrix([[1.0, 0.0], [0.0, -1.0]], dtype = complex)
   id = np.matrix([[1.0, 0.0], [0.0, 1.0]], dtype = complex)
-
+  sx = np.matrix([[0.0, 1.0], [1.0, 0.0]], dtype = complex)
+  sy = np.matrix([[0.0, -1.j], [1.j, 0.0]], dtype = complex)
+  
   # Construimos el operador sz
   suma = kronecker(0.5*sz, 0, N)
   i = 1
@@ -76,4 +78,39 @@ def densidad(N):
   d = ketbra(np.array(ini), np.array(ini))
   res = d/(np.linalg.norm(d))
   return res, ini
+
+# Funcion que me genera una matriz densidad inicial a partir de una combinacion lineal de los autoestados de Sz
+def densidad2(N):
+  sz = np.matrix([[1.0, 0.0], [0.0, -1.0]], dtype = complex)
+  id = np.matrix([[1.0, 0.0], [0.0, 1.0]], dtype = complex)
+  sx = np.matrix([[0.0, 1.0], [1.0, 0.0]], dtype = complex)
+  sy = np.matrix([[0.0, -1.j], [1.j, 0.0]], dtype = complex)
+  
+  # Construimos el operador sz
+  suma = kronecker(0.25*np.dot(sz, sz) + 0.25*np.dot(sy, sy) + 0.25*np.dot(sx, sx), 0, N)
+  i = 1
+  while(i < N):
+    suma += kronecker(0.25*np.dot(sz, sz) + 0.25*np.dot(sy, sy) + 0.25*np.dot(sx, sx), i, N)
+    i += 1
+  spin = suma
+  #print(spin)
+
+  # Creamos la base de autoestados de sz
+  todo = sp.Matrix(spin, dtype = complex).eigenvects()
+  base = [np.array(tup[2], dtype = complex) for tup in todo]
+  #base = [np.linalg.eig(spin)[1][:, i] for i in range(spin.shape[0])]
+  #print(base)
+
+  # Construimos el vector inicial
+  a, b = random.random(), random.random()
+  ini = (a + b*1.j)*base[0]
+  for i in range(1, len(base)):
+    a, b = random.random(), random.random()
+    ini += (a + b*1.j)*base[i]
+  # Le hacemos el ketbra para construir la matriz densidad
+
+  ini = ini/(np.linalg.norm(ini))
+  d = ketbra(np.array(ini), np.array(ini))
+  #res = d/(np.linalg.norm(d))
+  return d, ini
 

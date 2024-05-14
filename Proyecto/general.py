@@ -11,6 +11,7 @@ import scipy as sc
 import matplotlib.pyplot as plt
 import random as random
 import qutip as q
+from matplotlib import cm
 
 # Funcion que me hace el producto de kronecker de las matrices identidad y ponemos en la posicion pos una matriz dada
 def kronecker(matriz, pos, n):
@@ -499,8 +500,8 @@ def Mpemba_sep(theta, phi, N):
   # Construimos el operador sz
   #spin_z = kronecker(0.5*sz, 0, N)
   #spin_y = kronecker(0.5*sy, 0, N)
-  spin_z = kronecker(0.5*sz, 0, N)
-  spin_y = kronecker(0.5*sy, 0, N)
+  spin_z = kronecker(sz, 0, N)
+  spin_y = kronecker(sy, 0, N)
   iden = np.eye(spin_y.shape[0], spin_y.shape[1])
   U1 = np.cos(0.5*phi)*iden + 1.j*np.sin(0.5*phi)*spin_z
   U2 = np.cos(0.5*theta)*iden + 1.j*np.sin(0.5*theta)*spin_y
@@ -549,8 +550,8 @@ def buscar_angulos(L1, d0, N):
             if(np.abs(res) < epsilon):
                 posibles.append([theta, phi])
                 traza.append(np.abs(res))
-            phi += 0.01
-        theta += 0.01
+            phi += 0.2
+        theta += 0.2
     
     return posibles, traza
 
@@ -558,3 +559,28 @@ def buscar_angulos(L1, d0, N):
 def estacionario_q(H, list_J):
     r = q.steadystate(q.Qobj(H), [q.Qobj(J) for J in list_J], sparse = False)
     return r.full()
+
+# Funcion que representa la esfera parametrizada segun angulos
+def parametrizacion_esfera(r, theta_range, phi_range):
+    theta_values = np.linspace(*theta_range, num = 100)
+    phi_values = np.linspace(*phi_range, num = 100)
+    
+    theta, phi = np.meshgrid(theta_values, phi_values)
+    
+    x = r * np.sin(theta)*np.cos(phi)
+    y = r* np.sin(theta)*np.sin(phi)
+    z = r * np.cos(theta)
+    
+    return x, y, z
+
+# Funcion que representa en la esfera los valores de los angulos que yo quiera
+def esfera_partes(r, theta_values, phi_values):
+    theta, phi = np.meshgrid(theta_values, phi_values)
+    
+    x = r * np.sin(theta) * np.cos(phi)
+    y = r * np.sin(theta) * np.sin(phi)
+    z = r * np.cos(theta)
+
+    return x, y, z
+
+# 

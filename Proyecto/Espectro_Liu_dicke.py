@@ -17,15 +17,15 @@ import general
 """ En este script vamos a diagonalizar el lindbladiano y ver como es su espectro, lo representamos en el plano complejo """
 
 # Generamos los operadores hamiltonioano y saltos
-N = 2
+N = 1
 #sigma = 1.0
 #k = 0.1*sigma
 #g = 1.0*sigma
 #w = 0.01*sigma
 sigma = 1.0
-k = 0.5*sigma
-g = 0.15*sigma
-w = 0.15*sigma
+k = 1*sigma
+g = 2*np.sqrt(2)*sigma
+w = 1*sigma
 params = [sigma, w, k, g]
 
 H, J = dicke.dicke(N, params)

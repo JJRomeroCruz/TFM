@@ -9,12 +9,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from qutip import *
 import dicke
+import time
+
+
+inicio = time.time()
 
 # Parámetros del sistema
-N = 5  # Número de átomos
+N = 30  # Número de átomos
 omega = 1.0  # Frecuencia del modo del campo electromagnético
 omega_a = 1.0  # Frecuencia de transición de los átomos
-g = 1.0  # Constante de acoplamiento átomo-modo
+#g = 1.0  # Constante de acoplamiento átomo-modo
+g = 0.5
 kappa = 1
 params = [omega, omega_a, kappa, g]
 # Operadores de los átomos y del modo del campo electromagnético
@@ -32,10 +37,10 @@ H, J = dicke.dicke_bueno(N, params)
 # Estado inicial: todos los átomos en el estado excitado y el modo del campo electromagnético en el estado de vacío
 #psi0 = tensor(basis(N, 0), basis(2, 1))
 d0, ini = dicke.densidad_bueno(N)
-#psi0 = Qobj(ini)
+psi0 = ini
 #d0 = Qobj(d0)
 # Lista de tiempos de la simulación
-tlist = np.linspace(0, 20, 100)
+tlist = np.linspace(0, 50, 100)
 #print(psi0)
 # Resolver la ecuación maestra para obtener la evolución temporal del sistema
 #output = mesolve(H, psi0, tlist, collapse_operators, [a.dag() * a, sigma_minus.dag() * sigma_minus])
@@ -55,4 +60,6 @@ plt.ylabel('Ocupación')
 plt.legend()
 plt.show()
 """
+fin = time.time()
+print('Tiempo: ' + str(fin-inicio))
 plt.plot(tlist, vector, 'bo')

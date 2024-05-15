@@ -377,23 +377,28 @@ def Mpemba2_mejorada(L, L_e, vals, d, N, ini):
   
   # segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo(list(np.real(vals)))
   segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo([np.real(elemento) for elemento in vals])
-  print('Autovalores', vals)
-  print('Segundo maximo', segundo_maximo)
+  #print('Autovalores', vals)
+  #print('Segundo maximo', segundo_maximo)
   #indice_segundo_maximo = vals.index(segundo_maximo)
-  print('Indice segundo maximo: ' + str(indice_segundo_maximo))
+  #print('Indice segundo maximo: ' + str(indice_segundo_maximo))
   
   # La pasamos a matriz
   L1 = np.reshape(L_e[indice_segundo_maximo], (d.shape[0], d.shape[1]))
-  L1 = sp.Matrix(L1, dtype = complex)
-  print('Autovalor asociado al l1: ', L1)
+  #L1 = sp.Matrix(L1, dtype = complex)
+  #print('Autovalor asociado al l1: ', L1)
 
   # Diagonalizamos la matriz L1
+  todo = (q.Qobj(L1)).eigenstates(sparse = False, sort = 'low')
+  autovals = todo[0]
+  autovects = [elemento.full() for elemento in todo[1]]
+  """
   todo = L1.eigenvects()
   autovals = [tup[0] for tup in todo]
   autovects = [np.array(tup[2][0], dtype = complex) for tup in todo]
   autovals = list(np.array(autovals, dtype = complex))
-  print('Autovalores de L1: ')
-  print(autovals)
+  """
+  #print('Autovalores de L1: ')
+  #print(autovals)
 
   # Ahora, generamos la base auxiliar para el vector estado inicial
   base_aux = generar_base_ortonormal(ini, int(2**N))
@@ -456,11 +461,16 @@ def Mpemba1_mejorada(L, L_e, autovals, d, N, ini):
   L1 = np.reshape(L_e[indice_segundo_maximo], (d.shape[0], d.shape[1]))
 
   # Diagonalizamos la matriz L1
+  todo = (q.Qobj(L1)).eigenstates(sparse = False, sort = 'low')
+  vals = todo[0]
+  vects = [elemento.full() for elemento in todo[1]]
+  """
   todo = (sp.Matrix(L1, dtype = complex)).eigenvects()
   vals = [tup[0] for tup in todo]
   vects = np.asarray([tup[2] for tup in todo], dtype = complex)
   vects = [np.reshape(elemento, (1, max(elemento.shape))) for elemento in vects]
   vals = list(np.array(vals, dtype = complex))
+  """
   #print('Autovalores de L1: ')
   #print(vals)
 
@@ -510,8 +520,8 @@ def Mpemba_sep(theta, phi, N):
   res = np.dot(U1, U2)
   i = 1
   while(i < N):
-    spin_z = kronecker(0.5*sz, i, N)
-    spin_y = kronecker(0.5*sy, i, N)
+    spin_z = kronecker(sz, i, N)
+    spin_y = kronecker(sy, i, N)
     #U1 = exponencial_matriz(0.5*1.j*phi*spin_z)
     #U2 = exponencial_matriz(0.5*1.j*theta*spin_y)
     U1 = np.cos(0.5*phi)*iden + 1.j*np.sin(0.5*phi)*spin_z
@@ -583,4 +593,17 @@ def esfera_partes(r, theta_values, phi_values):
 
     return x, y, z
 
-# 
+# Funcion que me construye el producto tensorial de matrices identidad con una matriz en la posicion que yo quiera
+def kronecker_q(matriz, pos, N):
+    ide = q.qeye(2)
+    if(pos == 0):
+      res = matriz
+    else:
+      res = ide
+
+    for i in range(1, N):
+      if(i == pos):
+        res = q.tensor(res, matriz)
+      else:
+        res = q.tensor(res, ide)
+    return res

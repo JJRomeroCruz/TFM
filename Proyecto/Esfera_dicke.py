@@ -19,12 +19,12 @@ import time
 inicio = time.time()
 
 # Generamos el hamiltoniano y los operadores de salto
-N = 2
+N = 5
 sigma = 1.0
 w = 1.0*sigma
 k = 1.0*sigma
 #g = 5.0*sigma
-g = np.sqrt(2)*sigma
+g = 2*np.sqrt(2)*sigma*N
 params = [sigma, w, k, g]
 H, J = dicke.dicke(N, params)
 

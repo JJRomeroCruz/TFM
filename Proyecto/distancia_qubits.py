@@ -1,32 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat May 11 20:27:23 2024
+Created on Wed May 15 11:31:31 2024
 
 @author: juanjo
 """
 import numpy as np
 import sympy as sp
+import scipy as sc
 import matplotlib.pyplot as plt
+import qutip as q
 import dicke
 import general
-import qutip as q
+import qubits
 
 """ Vamos a sacar la distancia de Hilbert Schmidt """
 # Generamos el hamiltoniano y los operadores de salto
-N = 2
+N = 1
 sigma = 1.0
-w = 1.0*sigma
-k = 1.0*sigma
-#g = 2.0*sigma + 1
+k = 0.7*sigma
 #g = 0.6*(1/np.sqrt(N) + 1)*np.sqrt(2)*sigma
-#g = np.sqrt(2)*sigma
-g = 1
-params = [sigma, w, k, g]
-H, J = dicke.dicke(N, params)
+#g = 1.0*sigma
+params = [sigma, k]
+H, J = qubits.qubits(N, params)
 
 # Matriz densidad inicial y vector inicial
-d0, ini = dicke.densidad2(N)
+d0, ini = qubits.densidad(N)
 #ini = np.eye(N*N)[0]
 #d0 = general.ketbra(ini, ini)
 
@@ -35,10 +34,9 @@ L, b = general.Limblad(H, [J])
 L = np.matrix(L, dtype = complex)
 # Diagonalizamos
 Lq = q.Qobj(L)
-#Lqh = q.Qobj(L.H)
 Lqh = Lq.dag()
-todo = Lq.eigenstates(sparse = False, sort = 'high', eigvals = 6)
-todoh = Lqh.eigenstates(sparse = False, sort = 'high', eigvals = 6)
+todo = Lq.eigenstates(sparse = False, sort = 'high', eigvals = 4)
+todoh = Lqh.eigenstates(sparse = False, sort = 'high', eigvals = 4)
 vals = todo[0]
 
 # autoMatrices derecha
@@ -84,8 +82,8 @@ v4 = general.solucion(d0_exp3, r, l, vals, tiempo)
 dens = [v1, v2, v3, v4]
 #dens = [v1, v2, v3]
 # Sacamos el estado estacionario
-est = general.estacionario_q(H, [J])
-#est = r[0]
+#est = general.estacionario_q(H, [J])
+est = r[0]
 #est = general.estacionario_bueno(vals, r, l, d0)
 #est = [elemento/np.trace(elemento) for elemento in est]
 #est = [np.dot(U_cambio, np.dot(elemento, np.conjugate(U_cambio.T))) for elemento in est]
@@ -102,6 +100,6 @@ plt.plot(tiempo, ob[3], 'y-', label = 'Mpemba_ang')
 #plt.ylim(0.0, 1.0040)
 #plt.xlim(0.0, 15.0)
 plt.legend(loc = 'upper right')
-plt.title('Distancia de Hilbert-Schmidt. Modelo de Dicke para N = ' + str(N) + ', k = ' + str(k) + ' y g = ' + str(g))
+plt.title('Distancia de Hilbert-Schmidt. Modelo de Dicke para N = ' + str(N) + ', k = ' + str(k))
 plt.show()
 #ploteo_MC(ob, tiempo)

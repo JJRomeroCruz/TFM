@@ -39,7 +39,7 @@ def qubits(N, params):
 
   return H, J
 
-def densidad_qubit(N):
+def densidad(N):
   sx = np.matrix([[0.0, -1.0], [1.0, 0.0]], dtype = complex)
   id = np.matrix([[1.0, 0.0], [0.0, 1.0]], dtype = complex)
 

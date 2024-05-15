@@ -1,44 +1,61 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat May 11 20:27:23 2024
+Created on Tue May 14 23:08:04 2024
 
 @author: juanjo
 """
+""" Hacemos una prueba con dicke para N = 2 """
+
 import numpy as np
-import sympy as sp
-import matplotlib.pyplot as plt
 import dicke
 import general
+import matplotlib.pyplot as plt
 import qutip as q
+import sympy as sp
 
-""" Vamos a sacar la distancia de Hilbert Schmidt """
-# Generamos el hamiltoniano y los operadores de salto
 N = 2
+#sigma = 1.0
+#k = 0.1*sigma
+#g = 1.0*sigma
+#w = 0.01*sigma
 sigma = 1.0
-w = 1.0*sigma
-k = 1.0*sigma
-#g = 2.0*sigma + 1
-#g = 0.6*(1/np.sqrt(N) + 1)*np.sqrt(2)*sigma
-#g = np.sqrt(2)*sigma
-g = 1
+k = 8*sigma
+#g = 0.1*sigma
+g = 6*np.sqrt(2)*sigma
+w = 8*sigma
 params = [sigma, w, k, g]
-H, J = dicke.dicke(N, params)
 
-# Matriz densidad inicial y vector inicial
+# Construimos el hamiltoniano
+#print(q.tensor(q.qeye(2), q.sigmaz()),  q.tensor(q.sigmaz(), q.qeye(2)))
+ter1 = sigma*(q.tensor(q.qeye(2), q.sigmaz()) + q.tensor(q.sigmaz(), q.qeye(2)))
+ter2 = 4*w*g*g/(N*(4*w*w + k*k))*(q.tensor(q.qeye(2), q.sigmax()) + q.tensor(q.sigmax(), q.qeye(2)))*(q.tensor(q.qeye(2), q.sigmax()) + q.tensor(q.sigmax(), q.qeye(2)))
+J = ((2*np.abs(g)*np.sqrt(k))/(np.sqrt(N*(4*w*w + k*k))))*(q.tensor(q.qeye(2), q.sigmax()) + q.tensor(q.sigmax(), q.qeye(2)))
+H = ter1 - ter2
+
 d0, ini = dicke.densidad2(N)
-#ini = np.eye(N*N)[0]
-#d0 = general.ketbra(ini, ini)
+H1, J1 = dicke.dicke(N, params)
 
-# Sacamos el lindbladiano y lo diagonalizamos
-L, b = general.Limblad(H, [J])
+print(H1 == H.full())
+print('H1', H1)
+print('H', H.full())
+
+Lq = q.liouvillian(H, c_ops = [J])
+Lqh = Lq.trans()
+#print('Lindbladiano', L)
+
+# Construimos el lindbladiano
+
+L, b = general.Limblad(sp.Matrix(H.full(), dtype = complex), [sp.Matrix(J.full(), dtype = complex)])
 L = np.matrix(L, dtype = complex)
+print(np.allclose(Lq.full(), L, atol = 1e-2))
+#print(Lq.full() == L)
 # Diagonalizamos
 Lq = q.Qobj(L)
-#Lqh = q.Qobj(L.H)
-Lqh = Lq.dag()
-todo = Lq.eigenstates(sparse = False, sort = 'high', eigvals = 6)
-todoh = Lqh.eigenstates(sparse = False, sort = 'high', eigvals = 6)
+Lqh = q.Qobj(L).dag()
+
+todo = Lq.eigenstates(sparse = False, sort = 'high', eigvals = 4)
+todoh = Lqh.eigenstates(sparse = False, sort = 'high', eigvals = 4)
 vals = todo[0]
 
 # autoMatrices derecha
@@ -56,8 +73,8 @@ l = [np.reshape(elemento, d0.shape) for elemento in todoh[1]]
 #l = [np.reshape(elemento, (d0.shape[0], d0.shape[1])) for elemento in l]
 
 # Sacamos Mpemba1 y Mpemba2
-U2, U_cambio = general.Mpemba2_mejorada(L, l, vals, d0, N, ini)
-U1, U_cambio = general.Mpemba1_mejorada(L, l, vals, d0, N, ini)
+U2, U_cambio = general.Mpemba2_mejorada(Lq.full(), l, vals, d0, N, ini)
+U1, U_cambio = general.Mpemba1_mejorada(Lq.full(), l, vals, d0, N, ini)
 
 
 # Sacamos Mpemba_ang
@@ -84,8 +101,10 @@ v4 = general.solucion(d0_exp3, r, l, vals, tiempo)
 dens = [v1, v2, v3, v4]
 #dens = [v1, v2, v3]
 # Sacamos el estado estacionario
-est = general.estacionario_q(H, [J])
-#est = r[0]
+#est = general.estacionario_q(H, [J])
+est = np.reshape(todo[1][0].full(), (d0.shape[0], d0.shape[1]))
+#print('estacionario ', np.trace(est/np.linalg.norm(est)))
+print('estacionario', ((todoh[1][1]).trans())*todo[1][3])
 #est = general.estacionario_bueno(vals, r, l, d0)
 #est = [elemento/np.trace(elemento) for elemento in est]
 #est = [np.dot(U_cambio, np.dot(elemento, np.conjugate(U_cambio.T))) for elemento in est]
@@ -97,6 +116,14 @@ plt.plot(tiempo, ob[0], 'b-', label = 'Random')
 #plt.plot(tiempo, ob[1], 'r-', label = 'Mpemba_cero')
 plt.plot(tiempo, ob[2], 'g-', label = 'Mpemba_nocero')
 plt.plot(tiempo, ob[3], 'y-', label = 'Mpemba_ang')
+sx = 0.5*q.tensor(q.qeye(2), q.sigmax()) + 0.5*q.tensor(q.sigmax(), q.qeye(2))
+sy = 0.5*q.tensor(q.qeye(2), q.sigmay()) + 0.5*q.tensor(q.sigmay(), q.qeye(2))
+sz = 0.5*q.tensor(q.qeye(2), q.sigmaz()) + 0.5*q.tensor(q.sigmaz(), q.qeye(2))
+#print(sx*sx + sy*sy + sz*sz)
+#print(sz)
+#print(q.sigmax()*q.sigmax() + q.sigmay()*q.sigmay() + q.sigmaz()*q.sigmaz())
+print(np.trace(np.dot(sz.full(), est)))
+
 #plt.xlim(0, 10)
 #plt.ylim(0.0, 0.5)
 #plt.ylim(0.0, 1.0040)

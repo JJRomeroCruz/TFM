@@ -24,7 +24,7 @@ N = 1
 #w = 0.01*sigma
 sigma = 1.0
 k = 1*sigma
-g = 2*np.sqrt(2)*sigma
+g = 2*sigma
 w = 1*sigma
 params = [sigma, w, k, g]
 

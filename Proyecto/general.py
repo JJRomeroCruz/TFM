@@ -687,7 +687,7 @@ def Mpemba1_mejorada_q(L, L_e, autovals, d, N, ini):
     # Si no hay ningun autovalor que sea 0, se coje una pareja de autovalores con signo contrario
     U = np.zeros(d.shape)
   #return np.dot(U, U_cambio), U_cambio
-  return q.Qobj(U), U_cambio
+  return q.Qobj(U)*q.Qobj(U_cambio), U_cambio
 
 # Funcion que nos calcula la transformacion de Mpemba2, pero con qutip
 def Mpemba2_mejorada_q(L, L_e, vals, d, N, ini):
@@ -730,7 +730,7 @@ def Mpemba2_mejorada_q(L, L_e, vals, d, N, ini):
   for i in range(1, N):
       U_cambio += autovects[i]*(base_aux[i].dag())
       
-  es_cero = [(np.allclose(np.abs(autovals[i]), 0, atol = 1e-5)) for i in range(len(autovals))]
+  es_cero = [(np.isclose(np.abs(autovals[i]), 0, atol = 1e-4)) for i in range(len(autovals))]
 
   print('Vamos a probar la via del no cero')
   # Se coje una pareja de autovalores con signo contrario
@@ -757,4 +757,4 @@ def Mpemba2_mejorada_q(L, L_e, vals, d, N, ini):
     print('No se puede coger la vía del no cero')
     U = np.zeros(d.shape)
   #return np.dot(U, U_cambio), U_cambio
-  return q.Qobj(U), U_cambio
+  return q.Qobj(U)*q.Qobj(U_cambio), U_cambio

@@ -144,7 +144,8 @@ def densidad2(N):
   return d, ini
 
 def dicke_bueno(N, params):
-    M = 16
+    M = 2
+    #M = 8
     j = N/2.0
     n = 2*j + 1
     Jz = q.tensor(q.qeye(M), q.jmat(j, 'z'))
@@ -157,12 +158,13 @@ def dicke_bueno(N, params):
     
     
     H = sigma*Jz - ((4.0*w*g*g)/(4.0*w**2 + k**2))*(1.0/N)*Jx*Jx
-    #J = ((2.0*np.abs(g)*np.sqrt(k))/(np.sqrt(N*(4*w*w + k*k))))*suma2
-    J = -((np.sqrt(k)*g*(4*w + 2*1.j*k))/(np.sqrt(N)*(4*w*w + k*k)))*Jx
+    J = ((2.0*np.abs(g)*np.sqrt(k))/(np.sqrt(N*(4*w*w + k*k))))*Jx
+    #J = -((np.sqrt(k)*g*(4*w + 2*1.j*k))/(np.sqrt(N)*(4*w*w + k*k)))*Jx
     return H, J
 
 def densidad_bueno(N):
-    M = 16
+    M = 2 # Numero de fotones
+    #M = 8
     j = N/2.0
     n = 2*j + 1
     Jz = q.tensor(q.qeye(M), q.jmat(j, 'z'))

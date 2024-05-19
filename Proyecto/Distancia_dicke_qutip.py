@@ -15,13 +15,13 @@ import qutip as q
 """ Vamos a sacar la distancia de Hilbert Schmidt """
 # Generamos el hamiltoniano y los operadores de salto
 N = 2
-sigma = 1.0
+sigma = 0.1
 w = 1.0*sigma
 k = 1.0*sigma
 #g = 2.0*sigma + 1
 #g = 0.6*(1/np.sqrt(N) + 1)*np.sqrt(2)*sigma
 #g = np.sqrt(2)*sigma
-g = 1
+g = 20*np.sqrt(sigma)
 params = [sigma, w, k, g]
 H, J = dicke.dicke(N, params)
 
@@ -71,12 +71,14 @@ d0_exp3 = np.dot(np.dot(U3, d0), np.conjugate(U3.T))
 
 
 # Sacamos la matriz inicial con cada transformacion
-d0_exp1 = np.dot(np.dot(U1, d0), np.conjugate(U1.T))
-d0_exp2 = np.dot(np.dot(U2, d0), np.conjugate(U2.T))
+#d0_exp1 = np.dot(np.dot(U1, d0), np.conjugate(U1.T))
+#d0_exp2 = np.dot(np.dot(U2, d0), np.conjugate(U2.T))
+d0_exp1 = U1*d0*U1.dag()
+d0_exp2 = U2*d0*U2.dag()
 #d0_exp2 = d0_exp2/np.trace(d0_exp2)
 
 # Calculamos la solucion
-tiempo = np.linspace(0, 100, 1000)
+tiempo = np.linspace(0, 40, 1000)
 v1 = general.solucion(d0, r, l, vals, tiempo)
 v2 = general.solucion(d0_exp1, r, l, vals, tiempo)
 v3 = general.solucion(d0_exp2, r, l, vals, tiempo)
@@ -84,7 +86,8 @@ v4 = general.solucion(d0_exp3, r, l, vals, tiempo)
 dens = [v1, v2, v3, v4]
 #dens = [v1, v2, v3]
 # Sacamos el estado estacionario
-est = general.estacionario_q(H, [J])
+est = q.steadystate(q.Qobj(H), [q.Qobj(J)])
+#est = general.estacionario_q(H, [J])
 #est = r[0]
 #est = general.estacionario_bueno(vals, r, l, d0)
 #est = [elemento/np.trace(elemento) for elemento in est]
@@ -92,7 +95,7 @@ est = general.estacionario_q(H, [J])
 
 # Representamos la distancia de Hilbert Smichdt al estado estacionario
 #m = 0
-ob = [[np.sqrt(np.trace(np.dot(np.conjugate((v[i] - est).T), (v[i] - est)))) for i in range(len(v))] for v in dens]
+ob = [[np.sqrt(np.trace(np.dot(np.conjugate((v[i] - est.full()).T), (v[i] - est.full())))) for i in range(len(v))] for v in dens]
 plt.plot(tiempo, ob[0], 'b-', label = 'Random')
 #plt.plot(tiempo, ob[1], 'r-', label = 'Mpemba_cero')
 plt.plot(tiempo, ob[2], 'g-', label = 'Mpemba_nocero')

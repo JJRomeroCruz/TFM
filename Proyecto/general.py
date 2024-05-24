@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import random as random
 import qutip as q
 from matplotlib import cm
+import dicke
 
 # Funcion que me hace el producto de kronecker de las matrices identidad y ponemos en la posicion pos una matriz dada
 def kronecker(matriz, pos, n):
@@ -500,35 +501,60 @@ def Mpemba1_mejorada(L, L_e, autovals, d, N, ini):
   return q.Qobj(U), U_cambio
 
 # Funcion que nos construye la transformacion de Mpemba, pero a base de transformaciones a un solo qubit
+"""
+def Mpemba_sep(theta, phi, N):  
+    M = 2 # Numero de fotones
+    #id = np.matrix([[1.0, 0.0], [0.0, 1.0]], dtype = complex)
+      #id = np.eye(matriz.shape[0], matriz.shape[1])
+      #sx = np.matrix([[0.0, 1.0], [1.0, 0.0]], dtype = complex)
+      #sy = np.matrix([[0.0, -1.j], [1.j, 0.0]], dtype = complex)
+      #sz = np.matrix([[1.0, 0.0], [0.0, -1.0]], dtype = complex)
+      
+      # Construimos el operador sz
+      #spin_z = kronecker(0.5*sz, 0, N)
+      #spin_y = kronecker(0.5*sy, 0, N)
+      spin_z = dicke.spin_operator(N, 'z')[1]
+      spin_y = dicke.spin_operator(N, 'y')[1]
+      #spin_z = kronecker(sz, 0, N)
+      #spin_y = kronecker(sy, 0, N)
+      res1 = 0
+      res2 = 0
+      iden = q.qeye(N)
+      for i in range(N):
+          s
+      iden = np.eye(spin_y.shape[0], spin_y.shape[1])
+      U1 = np.cos(0.5*phi)*iden + 1.j*np.sin(0.5*phi)*spin_z
+      U2 = np.cos(0.5*theta)*iden + 1.j*np.sin(0.5*theta)*spin_y
+      #U1 = exponencial_matriz(0.5*1.j*phi*spin_z)
+      #U2 = exponencial_matriz(0.5*1.j*theta*spin_y)
+      res = np.dot(U1, U2)
+      i = 1
+      while(i < N):
+        spin_z = kronecker(sz, i, N)
+        spin_y = kronecker(sy, i, N)
+        #U1 = exponencial_matriz(0.5*1.j*phi*spin_z)
+        #U2 = exponencial_matriz(0.5*1.j*theta*spin_y)
+        U1 = np.cos(0.5*phi)*iden + 1.j*np.sin(0.5*phi)*spin_z
+        U2 = np.cos(0.5*theta)*iden + 1.j*np.sin(0.5*theta)*spin_y
+        res = np.dot(res, np.dot(U1, U2))
+        i += 1
+    return res
+"""
+# Funcion que nos construye la transformacion de Mpemba, pero a base de transformaciones a un solo qubit
 def Mpemba_sep(theta, phi, N):
-  #id = np.matrix([[1.0, 0.0], [0.0, 1.0]], dtype = complex)
-  #id = np.eye(matriz.shape[0], matriz.shape[1])
-  #sx = np.matrix([[0.0, 1.0], [1.0, 0.0]], dtype = complex)
-  sy = np.matrix([[0.0, -1.j], [1.j, 0.0]], dtype = complex)
-  sz = np.matrix([[1.0, 0.0], [0.0, -1.0]], dtype = complex)
-
-  # Construimos el operador sz
-  #spin_z = kronecker(0.5*sz, 0, N)
-  #spin_y = kronecker(0.5*sy, 0, N)
-  spin_z = kronecker(sz, 0, N)
-  spin_y = kronecker(sy, 0, N)
-  iden = np.eye(spin_y.shape[0], spin_y.shape[1])
-  U1 = np.cos(0.5*phi)*iden + 1.j*np.sin(0.5*phi)*spin_z
-  U2 = np.cos(0.5*theta)*iden + 1.j*np.sin(0.5*theta)*spin_y
-  #U1 = exponencial_matriz(0.5*1.j*phi*spin_z)
-  #U2 = exponencial_matriz(0.5*1.j*theta*spin_y)
-  res = np.dot(U1, U2)
-  i = 1
-  while(i < N):
-    spin_z = kronecker(sz, i, N)
-    spin_y = kronecker(sy, i, N)
-    #U1 = exponencial_matriz(0.5*1.j*phi*spin_z)
-    #U2 = exponencial_matriz(0.5*1.j*theta*spin_y)
-    U1 = np.cos(0.5*phi)*iden + 1.j*np.sin(0.5*phi)*spin_z
-    U2 = np.cos(0.5*theta)*iden + 1.j*np.sin(0.5*theta)*spin_y
-    res = np.dot(res, np.dot(U1, U2))
-    i += 1
-  return res
+    iden = q.qeye(int(2**N))
+    spin_z = dicke.spin_operator(N, component = 'z')[1]
+    spin_y = dicke.spin_operator(N, component = 'y')[1]
+    #spin_z = [q.tensor(q.qeye(M), elemento) for elemento in dicke.spin_operator(N, 'z')[1]]
+    #spin_y = [q.tensor(q.qeye(M), elemento) for elemento in dicke.spin_operator(N, 'y')[1]]
+    res = iden.full()
+    #print(iden.shape, spin_z[0].shape)
+    
+    for i in range(N):
+        U1 = np.cos(0.5*phi)*iden.full() + 1.j*np.sin(0.5*phi)*spin_z[i].full()
+        U2 = np.cos(0.5*theta)*iden.full() + 1.j*np.sin(0.5*theta)*spin_y[i].full()
+        res = np.dot(np.dot(U1, U2), res)
+    return q.Qobj(res)
 
 # Funcion que da la evolución temporal de la diagonalizacion del lindbladiano
 def solucion(d, r, l, autovals, tiempo):
@@ -546,6 +572,7 @@ def solucion(d, r, l, autovals, tiempo):
 # Funcion que me busca los angulos que me permiten acelerar el decaimiento
 def buscar_angulos(L1, d0, N):
     epsilon = np.abs(np.trace(np.dot(L1, d0)))
+    #epsilon = np.abs((L1*d0).tr())
     posibles = []
     phi = 0.0
     theta = 0.0
@@ -555,13 +582,15 @@ def buscar_angulos(L1, d0, N):
         phi = 0.0
         while(phi < 2.0*np.pi):
             U = Mpemba_sep(theta, phi, N)
-            new_rho = np.dot(U, np.dot(d0, np.conjugate(U.T)))
+            #new_rho = U*d0*U.dag()
+            new_rho = np.dot(U.full(), np.dot(d0, np.conjugate((U.full()).T)))
             res = np.trace(np.dot(L1, new_rho))
+            #res = (L1*new_rho).tr()
             if(np.abs(res) < epsilon):
                 posibles.append([theta, phi])
                 traza.append(np.abs(res))
-            phi += 0.2
-        theta += 0.2
+            phi += 0.1
+        theta += 0.1
     
     return posibles, traza
 
@@ -640,11 +669,11 @@ def generar_base_ortonormal_q(vector):
 def Mpemba1_mejorada_q(L, L_e, autovals, d, N, ini):
 
   # Se obtiene el segundo autovalor con la parte real mayor
-  segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo(list(np.real(autovals)))
+  #segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo(list(np.real(autovals)))
 
   # Hacemos reshape
-  L1 = np.reshape(L_e[indice_segundo_maximo], (d.shape[0], d.shape[1]))
-
+  #L1 = np.reshape(L_e[indice_segundo_maximo], (d.shape[0], d.shape[1]))
+  L1 = np.reshape(L_e[1], (d.shape[0], d.shape[1]))
   # Diagonalizamos la matriz L1
   todo = (q.Qobj(L1)).eigenstates(sparse = False, sort = 'low')
   vals = todo[0]
@@ -687,21 +716,26 @@ def Mpemba1_mejorada_q(L, L_e, autovals, d, N, ini):
     # Si no hay ningun autovalor que sea 0, se coje una pareja de autovalores con signo contrario
     U = np.zeros(d.shape)
   #return np.dot(U, U_cambio), U_cambio
-  return q.Qobj(U)*q.Qobj(U_cambio), U_cambio
+  return q.Qobj(U), U_cambio
 
 # Funcion que nos calcula la transformacion de Mpemba2, pero con qutip
 def Mpemba2_mejorada_q(L, L_e, vals, d, N, ini):
    # Extraemos la matriz por la izquierda cuyo autovalor es el mayor (y no es cero)
   
   # segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo(list(np.real(vals)))
-  segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo([np.real(elemento) for elemento in vals])
+  #segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo([np.real(elemento) for elemento in vals])
   #print('Autovalores', vals)
   #print('Segundo maximo', segundo_maximo)
   #indice_segundo_maximo = vals.index(segundo_maximo)
   #print('Indice segundo maximo: ' + str(indice_segundo_maximo))
-  
+  L_buenos= []
+  for elemento in L_e:
+      if(np.allclose(L*elemento, np.zeros_like(L*elemento), atol = 1e-3) == False):
+          L_buenos.append(elemento)
   # La pasamos a matriz
-  L1 = np.reshape(L_e[indice_segundo_maximo], (d.shape[0], d.shape[1]))
+  #L1 = np.reshape(L_e[indice_segundo_maximo], (d.shape[0], d.shape[1]))
+  L1 = np.reshape(L_buenos[0], (d.shape[0], d.shape[1]))
+  #L1 = np.reshape(L_e[1], (d.shape[0], d.shape[1]))
   #L1 = sp.Matrix(L1, dtype = complex)
   #print('Autovalor asociado al l1: ', L1)
 
@@ -721,7 +755,7 @@ def Mpemba2_mejorada_q(L, L_e, vals, d, N, ini):
 
   # Ahora, generamos la base auxiliar para el vector estado inicial
   base_aux = generar_base_ortonormal_q(ini)
-  print('Dimension: ', base_aux[2].shape)
+  #print('Dimension: ', base_aux[2].shape)
   #base_aux = np.array([elemento for elemento in base_aux], dtype = complex)
   
   # Con esto, podemos generar la primera transformacion
@@ -730,31 +764,33 @@ def Mpemba2_mejorada_q(L, L_e, vals, d, N, ini):
   for i in range(1, N):
       U_cambio += autovects[i]*(base_aux[i].dag())
       
-  es_cero = [(np.isclose(np.abs(autovals[i]), 0, atol = 1e-4)) for i in range(len(autovals))]
+  #es_cero = [(np.isclose(np.abs(autovals[i]), 0, atol = 1e-4)) for i in range(len(autovals))]
 
   print('Vamos a probar la via del no cero')
   # Se coje una pareja de autovalores con signo contrario
   i = 0
-  indice_contrario = 0
-  indice_inicial = es_cero.index(False)
-  print(indice_inicial)
+  #indice_contrario = 0
+  #indice_inicial = es_cero.index(False)
+  #print(indice_inicial)
   #autovals = eliminar_duplicados(autovals)
-  es_contrario = [np.real(autovals[indice_inicial])*np.real(autovals[i]) < 0 for i in range(len(autovals))]
-  if(any(es_contrario)):
-    indice_contrario = es_contrario.index(True)
+  #es_contrario = [np.real(autovals[indice_inicial])*np.real(autovals[i]) < 0 for i in range(len(autovals))]
+  if(np.real(autovals[0])*np.real(autovals[-1]) < 0):
+    #indice_contrario = es_contrario.index(True)
     #print('(indice contrario, indice inicial, len(autovects)) = ' + str(indice_contrario) + ', ' + str(indice_inicial) + ', '  + ' ' + str(autovects[0].shape))
-    F = autovects[indice_inicial]*autovects[indice_contrario].dag() + autovects[indice_contrario]*autovects[indice_inicial].dag()
+    F = autovects[0]*autovects[-1].dag() + autovects[-1]*autovects[0].dag()
+    #F = autovects[indice_inicial]*autovects[indice_contrario].dag() + autovects[indice_contrario]*autovects[indice_inicial].dag()
     #F = ketbra(autovects[indice_inicial], autovects[indice_contrario]) + ketbra(autovects[indice_contrario], autovects[indice_inicial])
-    s = np.arctan(np.sqrt((np.abs(autovals[indice_inicial]))/(np.abs(autovals[indice_contrario]))))
+    s = np.arctan(np.sqrt((np.abs(autovals[0]))/(np.abs(autovals[-1]))))
+    #s = np.arctan(np.sqrt((np.abs(autovals[indice_inicial]))/(np.abs(autovals[indice_contrario]))))
     print("La s me sale: " + str(s) + ' se ha cogido la s que sale de los autovalores: ')
     #print((autovals[indice_inicial], autovals[indice_contrario]))
     #print(F)
     #identidad = kronecker(iden, 0, N)
     identidad = q.qeye(F.shape[0])
-    U = identidad + (np.cos(s) - 1.0)*(F.dag()*F) - 1.j*np.sin(s)*F
+    U = identidad + (np.cos(s) - 1.0)*(F*F) - 1.j*np.sin(s)*F
     #U = identidad + (np.cos(s) - 1.0)*(np.dot(np.conjugate(F.T), F)) - 1.j*np.sin(s)*F
   else:
     print('No se puede coger la vía del no cero')
     U = np.zeros(d.shape)
   #return np.dot(U, U_cambio), U_cambio
-  return q.Qobj(U)*q.Qobj(U_cambio), U_cambio
+  return q.Qobj(U), U_cambio, (autovals[0], autovals[-1])

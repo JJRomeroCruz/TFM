@@ -10,9 +10,6 @@ import sympy as sp
 import scipy as sc
 import random as random
 import matplotlib.pyplot as plt
-from general import ketbra, kronecker, matriz_cuadrada, H_eff, FL_vector, Limblad, Calcularp, NuevoEstado, segunda_posicion_mas_grande, Mpemba1, Mpemba2
-from general import indices_mayores_que_100, estacionario, ResolverSistema, eliminar_duplicados, generar_base_ortonormal, Mpemba2_mejorada, Mpemba1_mejorada
-from general import estacionario_bueno, solucion, Mpemba_sep, Mpemba1_mejorada, Mpemba2_mejorada, buscar_segundo_maximo
 import qutip as q
 import general
 
@@ -143,6 +140,33 @@ def densidad2(N):
   #res = d/(np.linalg.norm(d))
   return d, ini
 
+# Funcion que me devuelve el operador de espin en una cierta componente y el operador de spin total
+def spin_operator(N, component):
+    """
+    N: int (numero de qubits)
+    Component: str (componente del momento angular, 'x', 'y', 'z')
+    returns Qobj
+    """
+    if component == 'x':
+        op = q.sigmax()
+    elif component == 'y':
+        op = q.sigmay()
+    elif component == 'z':
+        op = q.sigmaz()
+    else: 
+        raise ValueError('La componente tiene que se x, y, o z')
+    
+    # Construimos los operadores
+    total_operator = 0
+    indv_operators = []
+    for i in range(N):
+        operators = [q.qeye(2) for _ in range(N)]
+        operators[i] = op
+        indv_operators.append(q.tensor(operators))
+        total_operator += q.tensor(operators)
+    
+    return total_operator, indv_operators
+
 def dicke_bueno(N, params):
     M = 2
     #M = 8
@@ -150,6 +174,8 @@ def dicke_bueno(N, params):
     n = 2*j + 1
     Jz = q.tensor(q.qeye(M), q.jmat(j, 'z'))
     Jx = q.tensor(q.qeye(M), q.jmat(j, 'x'))
+    #Jz = q.tensor(q.qeye(M), spin_operator(N, 'z')[0])
+    #Jx = q.tensor(q.qeye(M), spin_operator(N, 'x')[0])
     
     sigma = params[0]
     w = params[1]
@@ -167,11 +193,13 @@ def densidad_bueno(N):
     #M = 8
     j = N/2.0
     n = 2*j + 1
+    #Jz = q.tensor(q.qeye(M), spin_operator(N, 'z')[0])
+    #print(np.allclose(spin_operator(N, 'z')[0], q.jmat(2*j, 'z')))
     Jz = q.tensor(q.qeye(M), q.jmat(j, 'z'))
     #Jz = q.jmat(j, 'z')
     print(Jz.shape)
     # Creamos la base de autoestados de sz
-    todo = Jz.eigenstates(sparse = False, sort = 'high')
+    todo = Jz.eigenstates(sparse = True, sort = 'high')
     base = todo[1]
     #base = [elemento.full() for elemento in todo[1]]
     #base = [np.array(tup[2], dtype = complex) for tup in todo]

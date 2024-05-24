@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import qutip as q
 
 # Elegimos los parametros del sistema
-N = 2
+N = 20
 #sigma = 1.0
 #k = 0.1*sigma
 #g = 1.0*sigma
@@ -22,27 +22,32 @@ N = 2
 sigma = 1.0
 k = 1*sigma
 #g = 0.1*sigma
-g = -10*np.sqrt(2)*sigma
+g = 0*np.sqrt(2)*sigma
 w = 1*sigma
 params = [sigma, w, k, g]
-g_final = 10*np.sqrt(2)*sigma
+g_final = 5*np.sqrt(2)*sigma
 vectorg = []
 vectorl = []
 while(g < g_final):
     # Sacamos el lindbladiano
     params = [sigma, w, k, g]
     H, J = dicke.dicke(N, params)
-    L, b = general.Limblad(H, [J])
-    
+    #L, b = general.Limblad(H, [J])
+    L = q.liouvillian(q.Qobj(H), [q.Qobj(J)])
     # Diagonalizamos el lindbladiano
-    L = np.matrix(L, dtype = complex)
-    Lq = q.Qobj(L)
-    vects = Lq.eigenstates(sparse = False, sort = 'high', eigvals= N + 2)
-    
+    #L = np.matrix(L, dtype = complex)
+    #Lq = q.Qobj(L)
+    todo = L.eigenstates(sparse = False, sort = 'high', eigvals= N + 5)
+    vects = todo[1]
+    vals = todo[0]
     # Almacenamos los autovalores
     vectorg.append(g)
+    L_buenos= []
+    for i in range(len(vals)):
+        if(np.allclose(L*vects[i], np.zeros_like(L*vects[i]), atol = 1e-3) == False):
+            L_buenos.append(vals[i])
     #vectorl.append(vects[0][-1] - vects[0][-2])
-    vectorl.append(vects[0][-2])    
+    vectorl.append(L_buenos[0])    
     g += 0.1*sigma
     
 # Representamos la grafica

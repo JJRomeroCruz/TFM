@@ -11,32 +11,32 @@ import sympy as sp
 import matplotlib.pyplot as plt
 import dicke
 import general
+import qutip as q
 #from dicke.py import dicke, densidad
 #from general.py import Limblad 
 
 """ En este script vamos a diagonalizar el lindbladiano y ver como es su espectro, lo representamos en el plano complejo """
 
 # Generamos los operadores hamiltonioano y saltos
-N = 1
+N = 20
 #sigma = 1.0
 #k = 0.1*sigma
 #g = 1.0*sigma
 #w = 0.01*sigma
 sigma = 1.0
 k = 1*sigma
-g = 2*sigma
+g = 1*sigma
 w = 1*sigma
 params = [sigma, w, k, g]
 
 H, J = dicke.dicke(N, params)
 
 #Lindbladiano
-L, b = general.Limblad(H, [J])
+L = q.liouvillian(q.Qobj(H), [q.Qobj(J)])
 
 # Lo diagonalizamos
-todo = L.eigenvects()
-vals = [tup[0] for tup in todo]
-vects = [tup[2] for tup in todo]
+todo = L.eigenstates(sparse = True, eigvals = N)
+vals = todo[0]
 
 re = [sp.re(elemento) for elemento in vals]
 im = [sp.im(elemento) for elemento in vals]

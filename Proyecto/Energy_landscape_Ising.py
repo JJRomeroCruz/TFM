@@ -12,7 +12,7 @@ from qutip import *
 
 # Definición de parámetros
 N = 4  # Número de sitios
-J = 1.0  # Constante de acoplamiento
+#J = 1.0  # Constante de acoplamiento
 h_values = np.linspace(0, 10, 100)  # Valores del campo magnético transversal
 J_values = np.linspace(-5, 5, 100)  # Valores de la constante de acoplamiento
 

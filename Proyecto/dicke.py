@@ -172,8 +172,10 @@ def dicke_bueno(N, params):
     #M = 8
     j = N/2.0
     n = 2*j + 1
-    Jz = q.tensor(q.qeye(M), q.jmat(j, 'z'))
-    Jx = q.tensor(q.qeye(M), q.jmat(j, 'x'))
+    Jz = q.jmat(j, 'z')
+    Jx = q.jmat(j, 'x')
+    #Jz = q.tensor(q.qeye(M), q.jmat(j, 'z'))
+    #Jx = q.tensor(q.qeye(M), q.jmat(j, 'x'))
     #Jz = q.tensor(q.qeye(M), spin_operator(N, 'z')[0])
     #Jx = q.tensor(q.qeye(M), spin_operator(N, 'x')[0])
     
@@ -195,8 +197,8 @@ def densidad_bueno(N):
     n = 2*j + 1
     #Jz = q.tensor(q.qeye(M), spin_operator(N, 'z')[0])
     #print(np.allclose(spin_operator(N, 'z')[0], q.jmat(2*j, 'z')))
-    Jz = q.tensor(q.qeye(M), q.jmat(j, 'z'))
-    #Jz = q.jmat(j, 'z')
+    #Jz = q.tensor(q.qeye(M), q.jmat(j, 'z'))
+    Jz = q.jmat(j, 'z')
     print(Jz.shape)
     # Creamos la base de autoestados de sz
     todo = Jz.eigenstates(sparse = True, sort = 'high')

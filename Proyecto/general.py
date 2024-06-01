@@ -565,7 +565,9 @@ def solucion(d, r, l, autovals, tiempo):
     suma = 0.0
     #suma = r[0]*np.trace(np.dot(l[0], d))*np.exp(t*autovals[0])
     for i in range(0, len(r)):
-      suma += r[i]*np.trace(np.dot(l[i], d))*np.exp(t*autovals[i])
+        if(np.real(autovals[i]) < 0):
+            suma += r[i]*((l[i]*d).tr())*np.exp(t*autovals[i])
+            #suma += r[i]*np.trace(np.dot(l[i], d))*np.exp(t*autovals[i])
     res.append(suma)
   return res
 
@@ -589,8 +591,8 @@ def buscar_angulos(L1, d0, N):
             if(np.abs(res) < epsilon):
                 posibles.append([theta, phi])
                 traza.append(np.abs(res))
-            phi += 0.1
-        theta += 0.1
+            phi += 0.3
+        theta += 0.3
     
     return posibles, traza
 
@@ -690,7 +692,9 @@ def Mpemba1_mejorada_q(L, L_e, autovals, d, N, ini):
   #print(vals)
 
   # Ahora, generamos la base auxiliar para el vector ini
-  base_aux = generar_base_ortonormal_q(ini)
+  #base_aux = generar_base_ortonormal_q(ini)
+  base_aux = generar_base_ortonormal(ini, N+1)
+  base_aux= [q.Qobj(x) for x in base_aux]
   #base_aux = np.asarray([elemento for elemento in base_aux], dtype = complex)
   U_cambio = vects[0]*(base_aux[0].dag())
   #U_cambio = ketbra((vects[0]), base_aux[0])
@@ -700,23 +704,28 @@ def Mpemba1_mejorada_q(L, L_e, autovals, d, N, ini):
 
   # Ahora, tenemos que dividir en dos caminos, definimos una tolerancia
   #tol = 1.0e-14
-  es_cero = [(np.allclose(np.abs(vals[i]), 0.0, atol = 1e-2)) for i in range(len(vals))]
+  es_cero = [(np.allclose(np.abs(vals[i]), 0.0, atol = 1e-5)) for i in range(len(vals))]
 
   if(any(es_cero)):
-      
     print('Se puede hacer la vía del cero, con el autovalor: ')
     # Nos vamos al caso en el que un autovalor es 0
     indice = es_cero.index(True)
     #print(vals[indice])
+    #print(vals[indice])
+    print(vals[indice])
     #U = ketbra(ini, vects[indice][0])
     U = ini*(vects[indice].dag())
+    #U = ini*(vects[indice].dag())
     #U = ketbra(ini, vects[indice])
   else:
     print('No se ha podido hacer la via del cero')
     # Si no hay ningun autovalor que sea 0, se coje una pareja de autovalores con signo contrario
     U = np.zeros(d.shape)
   #return np.dot(U, U_cambio), U_cambio
-  return q.Qobj(U), U_cambio
+  #return q.Qobj(U), U_cambio
+  return q.Qobj(U)*q.Qobj(U_cambio), U_cambio
+    
+
 
 # Funcion que nos calcula la transformacion de Mpemba2, pero con qutip
 def Mpemba2_mejorada_q(L, L_e, vals, d, N, ini):
@@ -730,12 +739,12 @@ def Mpemba2_mejorada_q(L, L_e, vals, d, N, ini):
   #print('Indice segundo maximo: ' + str(indice_segundo_maximo))
   L_buenos= []
   for elemento in L_e:
-      if(np.allclose(L*elemento, np.zeros_like(L*elemento), atol = 1e-3) == False):
+      if(np.allclose(L*elemento, np.zeros_like(L*elemento), atol = 1e-2) == False):
           L_buenos.append(elemento)
   # La pasamos a matriz
   #L1 = np.reshape(L_e[indice_segundo_maximo], (d.shape[0], d.shape[1]))
   L1 = np.reshape(L_buenos[0], (d.shape[0], d.shape[1]))
-  #L1 = np.reshape(L_e[1], (d.shape[0], d.shape[1]))
+  L1 = np.reshape(L_e[1], (d.shape[0], d.shape[1]))
   #L1 = sp.Matrix(L1, dtype = complex)
   #print('Autovalor asociado al l1: ', L1)
 
@@ -754,7 +763,9 @@ def Mpemba2_mejorada_q(L, L_e, vals, d, N, ini):
   #print(autovals)
 
   # Ahora, generamos la base auxiliar para el vector estado inicial
-  base_aux = generar_base_ortonormal_q(ini)
+  #base_aux = generar_base_ortonormal_q(ini)
+  base_aux = generar_base_ortonormal(ini, N+1)
+  base_aux = [q.Qobj(x) for x in base_aux]
   #print('Dimension: ', base_aux[2].shape)
   #base_aux = np.array([elemento for elemento in base_aux], dtype = complex)
   
@@ -793,4 +804,5 @@ def Mpemba2_mejorada_q(L, L_e, vals, d, N, ini):
     print('No se puede coger la vía del no cero')
     U = np.zeros(d.shape)
   #return np.dot(U, U_cambio), U_cambio
-  return q.Qobj(U), U_cambio, (autovals[0], autovals[-1])
+  return q.Qobj(U)*q.Qobj(U_cambio), U_cambio, (autovals[0], autovals[-1])
+  #return q.Qobj(U), U_cambio, (autovals[0], autovals[-1])

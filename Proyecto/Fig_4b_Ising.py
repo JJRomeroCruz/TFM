@@ -1,23 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri May 24 00:26:16 2024
+Created on Sat Jun  1 00:41:57 2024
 
 @author: juanjo
 """
 import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
-import qutip as q
-import ising
 import dicke
+import ising
 import general
 import time
-
-"""
-Aquí sacamos la figura 2 del artículo de rotaciones individuales
-"""
-inicio = time.time()
+import qutip as q
 
 # Elegimos los parametros queno van a cambiar
 gam = 1
@@ -38,13 +33,24 @@ for i in range(X.shape[0]):
         L = q.liouvillian(H, list_J)
         todoh = (L.dag()).eigenstates(sparse = True, sort = 'high', eigvals = N +2)
         vals, vects = todoh
-        Z[i, j] = sorted(vals, key = np.real)[1]
+        Z[i, j] = np.real(vals[1])/np.real(vals[2])
         
 # Representamos 
+"""
+fig = plt.figure()
+#ax = fig.add_subplot(111, projection='3d')
+ax = fig.add_subplot(111)
+#ax.plot_surface(X, Y, Z, cmap='inferno')
+ax.contour(X, Y, Z)
+ax.set_xlabel(r'$\Omega / \gamma$')
+ax.set_ylabel(r'$v / \gamma$')
+#ax.set_zlabel('Energía')
+plt.title('Energy Landscape del Modelo de Dicke')
+plt.show()
+"""
 fig1, ax2 = plt.subplots(layout='constrained')
 #CS = ax2.contourf(X, Y, Z, 10, cmap=plt.cm.bone)
-CS = ax2.contourf(X, Y, np.real(Z), 10, cmap = 'inferno')
-#CS = ax2.contourf(X, Y, Z, 10, cmap = 'viridis')
+CS = ax2.contourf(X, Y, Z, 10, cmap = 'viridis')
 # Note that in the following, we explicitly pass in a subset of the contour
 # levels used for the filled contours.  Alternatively, we could pass in
 # additional levels to provide extra resolution, or leave out the *levels*
@@ -58,11 +64,6 @@ ax2.set_ylabel(r'$\Omega / \gamma$')
 
 # Make a colorbar for the ContourSet returned by the contourf call.
 cbar = fig1.colorbar(CS)
-cbar.ax.set_ylabel(r'$Re(\lambda_2)$')
+cbar.ax.set_ylabel(r'$\tau_3 / \tau_2$')
 # Add the contour line levels to the colorbar
 #cbar.add_lines(CS2)
-    
-plt.show()
-
-fin = time.time()
-print('Tiempo: ' + str(fin-inicio))

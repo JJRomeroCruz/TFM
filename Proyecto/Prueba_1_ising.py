@@ -14,9 +14,9 @@ import dicke
 import qutip as q
 
 # Parametros
-N = 2
-om = 1
-v = 1
+N = 5
+om = 7
+v = 2.5
 #a = 1
 a = 0
 gam = 1
@@ -26,7 +26,10 @@ params = [om, v, a, gam]
 H, list_J = ising.ising(params, N)
 
 # Matriz densidad inicial y tiempo
-d0, ini = ising.densidad(N)
+d01, ini = ising.densidad(N)
+d02 = q.basis(int(2**N), 1)*(q.basis(int(2**N), 1)).dag()
+lamb = 0.5 
+d0 = lamb*d01 + (1-lamb)*d02
 tlist = np.linspace(0, 5, 100)
 
 # Lindbladiano
@@ -67,6 +70,7 @@ ax1.plot(tlist, vector2, 'r.-', label = 'Mpemba')
 
 ax1.grid(True)
 ax1.legend()
+ax1.set_title('Distancia H-S. N = ' + str(N))
 
 radio = 1.0
 theta_rango = (0, np.pi)
@@ -90,6 +94,6 @@ ax2 = fig.add_subplot(projection = '3d')
 ax2.plot_surface(x1, y1, z1, color = 'b', alpha = 0.3)
 ax2.scatter(x2, y2, z2, c = 'r', marker = 'o', label = 'Puntos')
 ax2.set_aspect('auto')
-ax2.set_title('Esfera')
+ax2.set_title('Posibles rotaciones')
 
 plt.show()

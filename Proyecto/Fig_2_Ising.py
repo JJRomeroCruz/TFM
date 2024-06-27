@@ -36,9 +36,10 @@ for i in range(X.shape[0]):
         params = [X[i, j]*gam, Y[i, j]*gam, a, gam]
         H, list_J = ising.ising(params, N)
         L = q.liouvillian(H, list_J)
-        todoh = (L.dag()).eigenstates(sparse = True, sort = 'high', eigvals = N +2)
+        todoh = (L.dag()).eigenstates(sparse = False, sort = 'high', eigvals = N +2)
         vals, vects = todoh
-        Z[i, j] = sorted(vals, key = np.real)[1]
+        #Z[i, j] = sorted(vals, key = np.real)[1]
+        Z[i, j] = vals[1]
         
 # Representamos 
 fig1, ax2 = plt.subplots(layout='constrained')

@@ -41,12 +41,21 @@ def matriz_cuadrada(n):
    return matriz
 
 # Funcion que calcula el hamiltoniano efectivo
+"""
 def H_eff(H, saltos):
   suma = np.zeros((H.shape[0], H.shape[1]), dtype = complex)
   for salto in saltos:
     suma += np.matrix(np.dot(salto.H, salto), dtype = complex)
   Heff = H - 0.5*(1.j)*suma
   return Heff
+"""
+def H_eff(H, saltos):
+    suma = q.Qobj(np.zeros_like(H, dtype = 'complex'))
+    for salto in saltos:
+        suma += (salto.dag())*salto
+    Heff = H - 0.5*(1.j)*suma
+    return Heff
+
 
 #Funcion para pasar de matriz a vector espacio de Fock-Liouville
 def FL_vector(m):
@@ -80,12 +89,22 @@ def Limblad(H, saltos):
   return L, b
 
 # Funcion que calcula las nuevas probabilidades de salto y de no salto
+"""
 def Calcularp(d, V):
   return np.trace(np.dot(np.dot(V, d), V.H))
+"""
+def Calcularp(d, V):
+    return (V*d*V.dag()).tr()
 
 # Funcion que nos calcula el nuevo estado tras un salto de tiempo
+"""
 def NuevoEstado(d, V, H):
   return (np.dot(np.dot(V, d), (V.H)))/(np.sqrt(np.trace(np.dot(np.dot(V, d), (V.H)))))
+"""
+def NuevoEstado(d, V, H):
+    num = V*d*V.dag()
+    den = np.sqrt((V*d*V.dag()).tr())
+    return num/den
 
 # Funcion que nos saca la posicion del segundo valor mas grande en una lista
 def segunda_posicion_mas_grande(lista):
@@ -251,10 +270,11 @@ def estacionario(L, d):
   return res
 
 # Funcion que resuelve el sistema mediante el metodo de montecarlo
-def ResolverSistema(d0, H, salto, N, nveces):
+"""
+def ResolverSistema(d0, H, salto, N, nveces, limite):
   # Establecemos un limite de tiempo
   t = 0.0
-  limite = 80.0
+  #limite = 80.0
   tiempo = [t]
   dt = 0.01
 
@@ -322,7 +342,54 @@ def ResolverSistema(d0, H, salto, N, nveces):
       suma[i] += elemento[i]
   final = [elemento/nveces for elemento in suma]
   return final, tiempo, vector_fotones
-
+"""
+def Resolver_Sistema(d0, H, salto, N, nveces, limite_t):
+    dt = 0.01
+    tiempo = np.linspace(0, limite_t, int(limite_t/dt))
+    vector_fotones = []
+    nfotones = 0
+    Heff = H_eff(H, salto)
+    
+    # Operadores de salto
+    V = [np.sqrt(dt)*J for J in salto]
+    V0 = q.qeye(Heff.shape[0]) - 1.j*dt*Heff
+    intentos = []
+    
+    # Empezamos con el bucle
+    for i in range(nveces):
+        nfotones = 0
+        d = d0
+        res = []
+        # Probabilidades iniciales
+        p0 = Calcularp(d0, V0)
+        p = Calcularp(d0, V[0])
+        #p = 1-p0
+        for t in tiempo:
+            prob = random.random()
+            #print('probabilidad: ', p)
+            if(prob < np.abs(p)):
+                nfotones += 1
+                d = NuevoEstado(d, V[0], H)
+            else:
+                d = NuevoEstado(d, V0, H)
+            
+            # Calculamos las nuevas probabilidades
+            p0 = Calcularp(d, V0)
+            #p = 1-p0
+            p = Calcularp(d, V[0])
+            res.append(d)
+        intentos.append(res)
+        vector_fotones.append(nfotones)
+        
+    # Calculamos el promedio de las trayectorias
+    suma = [0 for i in range(len(intentos[0]))]
+    for i in range(len(intentos[0])):
+        for elemento in intentos:
+            suma[i] += elemento[i]
+    final = [elemento/nveces for elemento in suma]
+    return final, tiempo, vector_fotones
+    
+    
 # Funcion que, dado un vector y su dimension, me genera una base de vectores ortonormales en la cual este mismo vector es el primero
 def generar_base_ortonormal(vector, dim):
     # Normalizar el primer vector
@@ -575,6 +642,7 @@ def solucion(d, r, l, autovals, tiempo):
 def buscar_angulos(L1, d0, N):
     epsilon = np.abs(np.trace(np.dot(L1, d0)))
     #epsilon = np.abs((L1*d0).tr())
+    #epsilon = 1e-2
     posibles = []
     phi = 0.0
     theta = 0.0
@@ -591,8 +659,8 @@ def buscar_angulos(L1, d0, N):
             if(np.abs(res) < epsilon):
                 posibles.append([theta, phi])
                 traza.append(np.abs(res))
-            phi += 0.3
-        theta += 0.3
+            phi += 0.1
+        theta += 0.1
     
     return posibles, traza
 
@@ -806,3 +874,20 @@ def Mpemba2_mejorada_q(L, L_e, vals, d, N, ini):
   #return np.dot(U, U_cambio), U_cambio
   return q.Qobj(U)*q.Qobj(U_cambio), U_cambio, (autovals[0], autovals[-1])
   #return q.Qobj(U), U_cambio, (autovals[0], autovals[-1])
+  
+def densidad_p(N, inicial, final):
+    j = N/2.0
+    n = 2*j + 1
+    Jz = q.jmat(j, 'z')
+    todo = Jz.eigenstates(sparse = False, sort = 'high')
+    base = todo[1]
+    
+    a, b = inicial + (final-inicial)*random.random(), inicial + (final-inicial)*random.random()
+    ini = (a + b*1.j)*base[0]
+    for i in range(1, len(base)):
+        a, b = inicial + (final-inicial)*random.random(), inicial + (final-inicial)*random.random()
+        ini += (a + b*1.j)*base[i]
+    
+    ini = ini.unit()
+    d = ini*ini.dag()
+    return d, ini

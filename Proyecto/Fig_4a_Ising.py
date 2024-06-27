@@ -16,42 +16,39 @@ import qutip as q
 
 # Elegimos los parametros queno van a cambiar
 gam = 1
-a = 0
+a = 1
 N = 5
-om_values = np.linspace(4, 0, 20)
-v_values = np.linspace(0, 7, 20)
+om_values = np.linspace(4, 0.1, 12)
+v_values = np.linspace(0.1, 7, 12)
 X, Y = np.meshgrid(om_values, v_values)
-Z = np.zeros_like(X)
+Z = np.zeros_like(X, dtype = complex)
 d0, ini = ising.densidad(N)
-A_total =(2*np.pi**2)/0.3**2
+salto_theta = 0.1
+salto_phi = 0.1
+#A_total =(2*np.pi**2)/0.1**2
+A_total = 4.0*np.pi
 # Recorremos los valores de los parametros
 for i in range(X.shape[0]):
+    print(i)
     for j in range(X.shape[1]):
+        print(j, X[i, j], Y[i, j])
         params = [X[i, j]*gam, Y[i, j]*gam, a, gam]
         H, list_J = ising.ising(params, N)
         L = q.liouvillian(H, list_J)
-        todoh = (L.dag()).eigenstates(sparse = True, sort = 'high', eigvals = N +2)
+        todoh = (L.dag()).eigenstates(sparse = False, sort = 'high', eigvals = N, maxiter = 1e8)
         vals, vects = todoh
         l1 = np.reshape(vects[1], (d0.shape[0], d0.shape[1]))
         posibles, traza = general.buscar_angulos(l1, d0.full(), N)
-        Z[i, j] = len(posibles)/A_total
+        suma = 0.0
+        for tup in posibles:
+            suma += salto_theta*salto_phi*np.sin(tup[0])
+        Z[i, j] = suma/A_total
         
-"""
-# Representamos 
-fig = plt.figure()
-#ax = fig.add_subplot(111, projection='3d')
-ax = fig.add_subplot(111)
-#ax.plot_surface(X, Y, Z, cmap='inferno')
-ax.contour(X, Y, Z)
-ax.set_xlabel(r'$\Omega / \gamma$')
-ax.set_ylabel(r'$v / \gamma$')
-#ax.set_zlabel('Energía')
-plt.title('Energy Landscape del Modelo de Dicke')
-plt.show()
-"""
+        
 fig1, ax2 = plt.subplots(layout='constrained')
 #CS = ax2.contourf(X, Y, Z, 10, cmap=plt.cm.bone)
-CS = ax2.contourf(X, Y, Z, 10, cmap = 'viridis')
+# Antes he usado viridis
+CS = ax2.contourf(X, Y, Z, 10, cmap = 'inferno')
 # Note that in the following, we explicitly pass in a subset of the contour
 # levels used for the filled contours.  Alternatively, we could pass in
 # additional levels to provide extra resolution, or leave out the *levels*
@@ -59,12 +56,13 @@ CS = ax2.contourf(X, Y, Z, 10, cmap = 'viridis')
 
 #CS2 = ax2.contour(CS, levels=CS.levels[::2], colors='r')
 
-ax2.set_title('Nonsense (3 masked regions)')
-ax2.set_xlabel('word length anomaly')
-ax2.set_ylabel('sentence length anomaly')
+ax2.set_title(r'$a = 1$')
+ax2.set_xlabel(r'$V / \gamma$')
+ax2.set_ylabel(r'$\Omega / \gamma$')
 
 # Make a colorbar for the ContourSet returned by the contourf call.
 cbar = fig1.colorbar(CS)
-cbar.ax.set_ylabel('verbosity coefficient')
+cbar.ax.set_ylabel('Área')
 # Add the contour line levels to the colorbar
-cbar.add_lines(CS2)
+#cbar.add_lines(CS2)     
+plt.savefig('Fig_4a_Ising_a1.png')

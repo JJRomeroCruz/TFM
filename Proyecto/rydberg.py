@@ -33,3 +33,4 @@ def rydberg(N, params):
 def densidad(N):
     return q.basis(int(N+1), 0)*(q.basis(int(N+1), 0)).dag(), q.basis(int(N+1), 0)
 
+

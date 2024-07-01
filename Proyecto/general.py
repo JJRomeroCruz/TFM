@@ -17,7 +17,6 @@ import dicke
 # Funcion que me hace el producto de kronecker de las matrices identidad y ponemos en la posicion pos una matriz dada
 def kronecker(matriz, pos, n):
   ide = np.matrix([[1.0, 0.0], [0.0, 1.0]], dtype = complex)
-  #res = np.zeros((int(2**n), int(2**n)))
   if(pos == 0):
     res = matriz
   else:
@@ -41,14 +40,6 @@ def matriz_cuadrada(n):
    return matriz
 
 # Funcion que calcula el hamiltoniano efectivo
-"""
-def H_eff(H, saltos):
-  suma = np.zeros((H.shape[0], H.shape[1]), dtype = complex)
-  for salto in saltos:
-    suma += np.matrix(np.dot(salto.H, salto), dtype = complex)
-  Heff = H - 0.5*(1.j)*suma
-  return Heff
-"""
 def H_eff(H, saltos):
     suma = q.Qobj(np.zeros_like(H, dtype = 'complex'))
     for salto in saltos:
@@ -89,18 +80,10 @@ def Limblad(H, saltos):
   return L, b
 
 # Funcion que calcula las nuevas probabilidades de salto y de no salto
-"""
-def Calcularp(d, V):
-  return np.trace(np.dot(np.dot(V, d), V.H))
-"""
 def Calcularp(d, V):
     return (V*d*V.dag()).tr()
 
 # Funcion que nos calcula el nuevo estado tras un salto de tiempo
-"""
-def NuevoEstado(d, V, H):
-  return (np.dot(np.dot(V, d), (V.H)))/(np.sqrt(np.trace(np.dot(np.dot(V, d), (V.H)))))
-"""
 def NuevoEstado(d, V, H):
     num = V*d*V.dag()
     den = np.sqrt((V*d*V.dag()).tr())
@@ -270,79 +253,6 @@ def estacionario(L, d):
   return res
 
 # Funcion que resuelve el sistema mediante el metodo de montecarlo
-"""
-def ResolverSistema(d0, H, salto, N, nveces, limite):
-  # Establecemos un limite de tiempo
-  t = 0.0
-  #limite = 80.0
-  tiempo = [t]
-  dt = 0.01
-
-  vector_fotones = []
-  nfotones = 0 # numero de fotones
-  res = [d0]
-  # Hamiltoniano efectivo
-  Heff = H_eff(H, salto)
-
-  # Operadores de evolución y de salto del sistema
-  V = [np.sqrt(dt)*J for J in salto]
-  V_0 = kronecker(id, 0, N) - 1.j*dt*Heff
-
-  intentos = [] #Aqui guardamos todos los resultados para cada realizacion
-
-  # Calculamos las probabilides iniciales
-  p0 = Calcularp(d0, V_0)
-  p = Calcularp(d0, V[0])
-  d = d0
-  # Empezamos con el bucle
-  while(t < limite):
-    prob = random.random()
-    if(prob < p):
-      nfotones += 1
-      d = NuevoEstado(d, V[0], H)
-    else:
-      d = NuevoEstado(d, V_0, H)
-    p0 = Calcularp(d, V_0)
-    p = Calcularp(d, V[0])
-    res.append(d)
-    t += dt
-    tiempo.append(t)
-
-  vector_fotones.append(nfotones)
-  intentos.append(res)
-  # Ahora, hacemos el bucle otras nveces-1 veces para luego promediar
-  indice = 1
-  while(indice < nveces):
-    d = d0
-    nfotones = 0
-    res = [d0]
-    t = 0.0
-    # Calculamos las probabilidades iniciales
-    p0 = Calcularp(d, V_0)
-    p = Calcularp(d, V[0])
-    while(t < limite):
-      prob = random.random()
-      if(prob < p):
-        nfotones += 1
-        d = NuevoEstado(d, V[0], H)
-      else:
-        d = NuevoEstado(d, V_0, H)
-      p0 = Calcularp(d, V_0)
-      p = Calcularp(d, V[0])
-      res.append(d)
-      t += dt
-    intentos.append(res)
-    indice += 1
-    vector_fotones.append(nfotones)
-
-  # Por último calculamos el promedio de las trayectorias
-  suma = [0 for i in range(len(intentos[0]))]
-  for i in range(len(intentos[0])):
-    for elemento in intentos:
-      suma[i] += elemento[i]
-  final = [elemento/nveces for elemento in suma]
-  return final, tiempo, vector_fotones
-"""
 def Resolver_Sistema(d0, H, salto, N, nveces, limite_t):
     dt = 0.01
     tiempo = np.linspace(0, limite_t, int(limite_t/dt))
@@ -445,28 +355,14 @@ def Mpemba2_mejorada(L, L_e, vals, d, N, ini):
   
   # segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo(list(np.real(vals)))
   segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo([np.real(elemento) for elemento in vals])
-  #print('Autovalores', vals)
-  #print('Segundo maximo', segundo_maximo)
-  #indice_segundo_maximo = vals.index(segundo_maximo)
-  #print('Indice segundo maximo: ' + str(indice_segundo_maximo))
   
   # La pasamos a matriz
   L1 = np.reshape(L_e[indice_segundo_maximo], (d.shape[0], d.shape[1]))
-  #L1 = sp.Matrix(L1, dtype = complex)
-  #print('Autovalor asociado al l1: ', L1)
 
   # Diagonalizamos la matriz L1
   todo = (q.Qobj(L1)).eigenstates(sparse = False, sort = 'low')
   autovals = todo[0]
   autovects = [elemento.full() for elemento in todo[1]]
-  """
-  todo = L1.eigenvects()
-  autovals = [tup[0] for tup in todo]
-  autovects = [np.array(tup[2][0], dtype = complex) for tup in todo]
-  autovals = list(np.array(autovals, dtype = complex))
-  """
-  #print('Autovalores de L1: ')
-  #print(autovals)
 
   # Ahora, generamos la base auxiliar para el vector estado inicial
   base_aux = generar_base_ortonormal(ini, int(2**N))
@@ -478,7 +374,6 @@ def Mpemba2_mejorada(L, L_e, vals, d, N, ini):
   for i in range(1, N):
     U_cambio += ketbra(autovects[i], base_aux[i])
 
-  #tol = 1e-16
   es_cero = [(np.allclose(np.abs(autovals[i]), 0, atol = 1e-5)) for i in range(len(autovals))]
 
   print('Vamos a probar la via del no cero')
@@ -487,22 +382,17 @@ def Mpemba2_mejorada(L, L_e, vals, d, N, ini):
   indice_contrario = 0
   indice_inicial = es_cero.index(False)
   print(indice_inicial)
-  #autovals = eliminar_duplicados(autovals)
   es_contrario = [np.real(autovals[indice_inicial])*np.real(autovals[i]) < 0 for i in range(len(autovals))]
   if(any(es_contrario)):
     indice_contrario = es_contrario.index(True)
-    #print('(indice contrario, indice inicial, len(autovects)) = ' + str(indice_contrario) + ', ' + str(indice_inicial) + ', '  + ' ' + str(autovects[0].shape))
     F = ketbra(autovects[indice_inicial], autovects[indice_contrario]) + ketbra(autovects[indice_contrario], autovects[indice_inicial])
     s = np.arctan(np.sqrt((np.abs(autovals[indice_inicial]))/(np.abs(autovals[indice_contrario]))))
     print("La s me sale: " + str(s) + ' se ha cogido la s que sale de los autovalores: ')
-    #print((autovals[indice_inicial], autovals[indice_contrario]))
-    print(F)
     identidad = kronecker(iden, 0, N)
     U = identidad + (np.cos(s) - 1.0)*(np.dot(np.conjugate(F.T), F)) - 1.j*np.sin(s)*F
   else:
     print('No se puede coger la vía del no cero')
     U = np.zeros(d.shape)
-  #return np.dot(U, U_cambio), U_cambio
   return q.Qobj(U), U_cambio
 
 def estacionario_bueno(vals, vects_r, vects_l, d):
@@ -516,7 +406,6 @@ def estacionario_bueno(vals, vects_r, vects_l, d):
   m_est = [np.reshape(vects_r[indice], d.shape) for indice in indices_est]
   m_est = [np.trace(np.dot(vects_l[indices_est[0]], d))*m_est[i] for i in range(len(m_est))]
 
-  #m_est = [elemento/np.trace(elemento) for elemento in m_est]
   return m_est
 
 # Funcion que genera la transformacion de Mpemba1, pero haciendo antes lo de la matriz de cambio de base
@@ -532,16 +421,7 @@ def Mpemba1_mejorada(L, L_e, autovals, d, N, ini):
   todo = (q.Qobj(L1)).eigenstates(sparse = False, sort = 'low')
   vals = todo[0]
   vects = [elemento.full() for elemento in todo[1]]
-  """
-  todo = (sp.Matrix(L1, dtype = complex)).eigenvects()
-  vals = [tup[0] for tup in todo]
-  vects = np.asarray([tup[2] for tup in todo], dtype = complex)
-  vects = [np.reshape(elemento, (1, max(elemento.shape))) for elemento in vects]
-  vals = list(np.array(vals, dtype = complex))
-  """
-  #print('Autovalores de L1: ')
-  #print(vals)
-
+  
   # Ahora, generamos la base auxiliar para el vector ini
   base_aux = generar_base_ortonormal(ini, int(2**N))
   base_aux = np.asarray([elemento for elemento in base_aux], dtype = complex)
@@ -550,7 +430,6 @@ def Mpemba1_mejorada(L, L_e, autovals, d, N, ini):
     U_cambio += ketbra((vects[i]), base_aux[i])
 
   # Ahora, tenemos que dividir en dos caminos, definimos una tolerancia
-  #tol = 1.0e-14
   es_cero = [(np.allclose(np.abs(vals[i]), 0.0, atol = 1e-2)) for i in range(len(vals))]
 
   if(any(es_cero)):
@@ -558,55 +437,13 @@ def Mpemba1_mejorada(L, L_e, autovals, d, N, ini):
     # Nos vamos al caso en el que un autovalor es 0
     indice = es_cero.index(True)
     print(vals[indice])
-    #U = ketbra(ini, vects[indice][0])
     U = ketbra(ini, vects[indice])
   else:
     print('No se ha podido hacer la via del cero')
     # Si no hay ningun autovalor que sea 0, se coje una pareja de autovalores con signo contrario
     U = np.zeros(d.shape)
-  #return np.dot(U, U_cambio), U_cambio
   return q.Qobj(U), U_cambio
 
-# Funcion que nos construye la transformacion de Mpemba, pero a base de transformaciones a un solo qubit
-"""
-def Mpemba_sep(theta, phi, N):  
-    M = 2 # Numero de fotones
-    #id = np.matrix([[1.0, 0.0], [0.0, 1.0]], dtype = complex)
-      #id = np.eye(matriz.shape[0], matriz.shape[1])
-      #sx = np.matrix([[0.0, 1.0], [1.0, 0.0]], dtype = complex)
-      #sy = np.matrix([[0.0, -1.j], [1.j, 0.0]], dtype = complex)
-      #sz = np.matrix([[1.0, 0.0], [0.0, -1.0]], dtype = complex)
-      
-      # Construimos el operador sz
-      #spin_z = kronecker(0.5*sz, 0, N)
-      #spin_y = kronecker(0.5*sy, 0, N)
-      spin_z = dicke.spin_operator(N, 'z')[1]
-      spin_y = dicke.spin_operator(N, 'y')[1]
-      #spin_z = kronecker(sz, 0, N)
-      #spin_y = kronecker(sy, 0, N)
-      res1 = 0
-      res2 = 0
-      iden = q.qeye(N)
-      for i in range(N):
-          s
-      iden = np.eye(spin_y.shape[0], spin_y.shape[1])
-      U1 = np.cos(0.5*phi)*iden + 1.j*np.sin(0.5*phi)*spin_z
-      U2 = np.cos(0.5*theta)*iden + 1.j*np.sin(0.5*theta)*spin_y
-      #U1 = exponencial_matriz(0.5*1.j*phi*spin_z)
-      #U2 = exponencial_matriz(0.5*1.j*theta*spin_y)
-      res = np.dot(U1, U2)
-      i = 1
-      while(i < N):
-        spin_z = kronecker(sz, i, N)
-        spin_y = kronecker(sy, i, N)
-        #U1 = exponencial_matriz(0.5*1.j*phi*spin_z)
-        #U2 = exponencial_matriz(0.5*1.j*theta*spin_y)
-        U1 = np.cos(0.5*phi)*iden + 1.j*np.sin(0.5*phi)*spin_z
-        U2 = np.cos(0.5*theta)*iden + 1.j*np.sin(0.5*theta)*spin_y
-        res = np.dot(res, np.dot(U1, U2))
-        i += 1
-    return res
-"""
 # Funcion que nos construye la transformacion de Mpemba, pero a base de transformaciones a un solo qubit
 def Mpemba_sep(theta, phi, N):
     iden = q.qeye(int(2**N))
@@ -727,153 +564,81 @@ def generar_base_ortonormal_q(vector):
         # Restar las proyecciones del vector original para ortogonalizarlo
         vector_ortogonalizado = vector_qobj - sum(proyecciones)
         # Normalizar el vector ortogonalizado para obtener un nuevo vector de la base
-        #vector_normalizado = vector_ortogonalizado.unit()
         vector_normalizado = vector_ortogonalizado
         # Agregar el nuevo vector a la base
         base.append(vector_normalizado)
     
-    #base = [elemento.unit() for elemento in base]
     return base
 
 # Funcion que me hace lo de Mpemba1 pero con qutip
 def Mpemba1_mejorada_q(L, L_e, autovals, d, N, ini):
-
-  # Se obtiene el segundo autovalor con la parte real mayor
-  #segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo(list(np.real(autovals)))
-
   # Hacemos reshape
-  #L1 = np.reshape(L_e[indice_segundo_maximo], (d.shape[0], d.shape[1]))
   L1 = np.reshape(L_e[1], (d.shape[0], d.shape[1]))
   # Diagonalizamos la matriz L1
   todo = (q.Qobj(L1)).eigenstates(sparse = False, sort = 'low')
   vals = todo[0]
   vects = todo[1]
-  #vects = [elemento.full() for elemento in todo[1]]
-  """
-  todo = (sp.Matrix(L1, dtype = complex)).eigenvects()
-  vals = [tup[0] for tup in todo]
-  vects = np.asarray([tup[2] for tup in todo], dtype = complex)
-  vects = [np.reshape(elemento, (1, max(elemento.shape))) for elemento in vects]
-  vals = list(np.array(vals, dtype = complex))
-  """
-  #print('Autovalores de L1: ')
-  #print(vals)
 
   # Ahora, generamos la base auxiliar para el vector ini
-  #base_aux = generar_base_ortonormal_q(ini)
   base_aux = generar_base_ortonormal(ini, N+1)
   base_aux= [q.Qobj(x) for x in base_aux]
-  #base_aux = np.asarray([elemento for elemento in base_aux], dtype = complex)
   U_cambio = vects[0]*(base_aux[0].dag())
-  #U_cambio = ketbra((vects[0]), base_aux[0])
   for i in range(1, N):
       U_cambio += vects[i]*(base_aux[i].dag())
-    #U_cambio += ketbra((vects[i]), base_aux[i])
 
   # Ahora, tenemos que dividir en dos caminos, definimos una tolerancia
-  #tol = 1.0e-14
   es_cero = [(np.allclose(np.abs(vals[i]), 0.0, atol = 1e-5)) for i in range(len(vals))]
 
   if(any(es_cero)):
     print('Se puede hacer la vía del cero, con el autovalor: ')
     # Nos vamos al caso en el que un autovalor es 0
     indice = es_cero.index(True)
-    #print(vals[indice])
-    #print(vals[indice])
-    print(vals[indice])
-    #U = ketbra(ini, vects[indice][0])
     U = ini*(vects[indice].dag())
-    #U = ini*(vects[indice].dag())
-    #U = ketbra(ini, vects[indice])
   else:
     print('No se ha podido hacer la via del cero')
     # Si no hay ningun autovalor que sea 0, se coje una pareja de autovalores con signo contrario
     U = np.zeros(d.shape)
-  #return np.dot(U, U_cambio), U_cambio
-  #return q.Qobj(U), U_cambio
   return q.Qobj(U)*q.Qobj(U_cambio), U_cambio
-    
-
 
 # Funcion que nos calcula la transformacion de Mpemba2, pero con qutip
 def Mpemba2_mejorada_q(L, L_e, vals, d, N, ini):
-   # Extraemos la matriz por la izquierda cuyo autovalor es el mayor (y no es cero)
-  
-  # segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo(list(np.real(vals)))
-  #segundo_maximo, indice_segundo_maximo = buscar_segundo_maximo([np.real(elemento) for elemento in vals])
-  #print('Autovalores', vals)
-  #print('Segundo maximo', segundo_maximo)
-  #indice_segundo_maximo = vals.index(segundo_maximo)
-  #print('Indice segundo maximo: ' + str(indice_segundo_maximo))
   L_buenos= []
   for elemento in L_e:
       if(np.allclose(L*elemento, np.zeros_like(L*elemento), atol = 1e-2) == False):
           L_buenos.append(elemento)
   # La pasamos a matriz
-  #L1 = np.reshape(L_e[indice_segundo_maximo], (d.shape[0], d.shape[1]))
   L1 = np.reshape(L_buenos[0], (d.shape[0], d.shape[1]))
   L1 = np.reshape(L_e[1], (d.shape[0], d.shape[1]))
-  #L1 = sp.Matrix(L1, dtype = complex)
-  #print('Autovalor asociado al l1: ', L1)
 
   # Diagonalizamos la matriz L1
   todo = (q.Qobj(L1)).eigenstates(sparse = False, sort = 'low')
   autovals = todo[0]
   autovects = todo[1]
-  #autovects = [elemento.full() for elemento in todo[1]]
-  """
-  todo = L1.eigenvects()
-  autovals = [tup[0] for tup in todo]
-  autovects = [np.array(tup[2][0], dtype = complex) for tup in todo]
-  autovals = list(np.array(autovals, dtype = complex))
-  """
-  #print('Autovalores de L1: ')
-  #print(autovals)
 
   # Ahora, generamos la base auxiliar para el vector estado inicial
-  #base_aux = generar_base_ortonormal_q(ini)
   base_aux = generar_base_ortonormal(ini, N+1)
   base_aux = [q.Qobj(x) for x in base_aux]
-  #print('Dimension: ', base_aux[2].shape)
-  #base_aux = np.array([elemento for elemento in base_aux], dtype = complex)
   
   # Con esto, podemos generar la primera transformacion
   U_cambio = autovects[0]*base_aux[0].dag()
-  #U_cambio = ketbra(autovects[0], base_aux[0])
   for i in range(1, N):
       U_cambio += autovects[i]*(base_aux[i].dag())
       
-  #es_cero = [(np.isclose(np.abs(autovals[i]), 0, atol = 1e-4)) for i in range(len(autovals))]
-
   print('Vamos a probar la via del no cero')
   # Se coje una pareja de autovalores con signo contrario
   i = 0
-  #indice_contrario = 0
-  #indice_inicial = es_cero.index(False)
-  #print(indice_inicial)
-  #autovals = eliminar_duplicados(autovals)
-  #es_contrario = [np.real(autovals[indice_inicial])*np.real(autovals[i]) < 0 for i in range(len(autovals))]
+ 
   if(np.real(autovals[0])*np.real(autovals[-1]) < 0):
-    #indice_contrario = es_contrario.index(True)
-    #print('(indice contrario, indice inicial, len(autovects)) = ' + str(indice_contrario) + ', ' + str(indice_inicial) + ', '  + ' ' + str(autovects[0].shape))
     F = autovects[0]*autovects[-1].dag() + autovects[-1]*autovects[0].dag()
-    #F = autovects[indice_inicial]*autovects[indice_contrario].dag() + autovects[indice_contrario]*autovects[indice_inicial].dag()
-    #F = ketbra(autovects[indice_inicial], autovects[indice_contrario]) + ketbra(autovects[indice_contrario], autovects[indice_inicial])
     s = np.arctan(np.sqrt((np.abs(autovals[0]))/(np.abs(autovals[-1]))))
-    #s = np.arctan(np.sqrt((np.abs(autovals[indice_inicial]))/(np.abs(autovals[indice_contrario]))))
     print("La s me sale: " + str(s) + ' se ha cogido la s que sale de los autovalores: ')
-    #print((autovals[indice_inicial], autovals[indice_contrario]))
-    #print(F)
-    #identidad = kronecker(iden, 0, N)
+  
     identidad = q.qeye(F.shape[0])
     U = identidad + (np.cos(s) - 1.0)*(F*F) - 1.j*np.sin(s)*F
-    #U = identidad + (np.cos(s) - 1.0)*(np.dot(np.conjugate(F.T), F)) - 1.j*np.sin(s)*F
   else:
     print('No se puede coger la vía del no cero')
     U = np.zeros(d.shape)
-  #return np.dot(U, U_cambio), U_cambio
   return q.Qobj(U)*q.Qobj(U_cambio), U_cambio, (autovals[0], autovals[-1])
-  #return q.Qobj(U), U_cambio, (autovals[0], autovals[-1])
   
 def densidad_p(N, inicial, final):
     j = N/2.0

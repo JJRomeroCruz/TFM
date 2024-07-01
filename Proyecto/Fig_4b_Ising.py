@@ -23,7 +23,7 @@ v_values = np.linspace(0, 7, 12)
 X, Y = np.meshgrid(om_values, v_values)
 Z = np.zeros_like(X, dtype = complex)
 d0, ini = ising.densidad(N)
-#A_total =(2*np.pi**2)/(0.3**2)
+
 # Recorremos los valores de los parametros
 for i in range(X.shape[0]):
     print(i)
@@ -40,27 +40,8 @@ for i in range(X.shape[0]):
             Z[i, j] = np.real(vals[1])/np.real(vals[3])
         
 # Representamos 
-"""
-fig = plt.figure()
-#ax = fig.add_subplot(111, projection='3d')
-ax = fig.add_subplot(111)
-#ax.plot_surface(X, Y, Z, cmap='inferno')
-ax.contour(X, Y, Z)
-ax.set_xlabel(r'$\Omega / \gamma$')
-ax.set_ylabel(r'$v / \gamma$')
-#ax.set_zlabel('Energía')
-plt.title('Energy Landscape del Modelo de Dicke')
-plt.show()
-"""
 fig1, ax2 = plt.subplots(layout='constrained')
-#CS = ax2.contourf(X, Y, Z, 10, cmap=plt.cm.bone)
 CS = ax2.contourf(X, Y, Z, 10, cmap = 'viridis')
-# Note that in the following, we explicitly pass in a subset of the contour
-# levels used for the filled contours.  Alternatively, we could pass in
-# additional levels to provide extra resolution, or leave out the *levels*
-# keyword argument to use all of the original levels.
-
-#CS2 = ax2.contour(CS, levels=CS.levels[::2], colors='r')
 
 ax2.set_title('a = 10')
 ax2.set_xlabel(r'$V / \gamma$')
@@ -70,5 +51,4 @@ ax2.set_ylabel(r'$\Omega / \gamma$')
 cbar = fig1.colorbar(CS)
 cbar.ax.set_ylabel(r'$\tau_3 / \tau_2$')
 # Add the contour line levels to the colorbar
-#cbar.add_lines(CS2)
 plt.savefig('Fig_4b_Ising_a1.png')

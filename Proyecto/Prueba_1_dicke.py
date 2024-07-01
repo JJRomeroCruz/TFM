@@ -73,16 +73,6 @@ for i in range(len(output1.states)):
 fin = time.time()
 print('Tiempo: ' + str(fin-inicio))
 
-"""
-plt.plot(tlist, vector1, 'b.-', label = 'Normal')
-plt.plot(tlist, vector2, 'r.-', label = 'Mpemba 1')
-plt.plot(tlist, vector3, 'go', label = 'Mpemba 2')
-plt.plot(tlist, vector4, 'y.-', label = 'Mpemba_ang')
-plt.legend()
-plt.title('g = ' + str(g))
-plt.show()
-"""
-
 fig = plt.figure(figsize = (12, 12))
 
 # Parte distancias

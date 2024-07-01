@@ -15,7 +15,7 @@ import qutip as q
 
 # Parametros
 N = 5
-om = 7
+om = 3
 v = 2.5
 #a = 1
 a = 0
@@ -28,7 +28,7 @@ H, list_J = ising.ising(params, N)
 # Matriz densidad inicial y tiempo
 d01, ini = ising.densidad(N)
 d02 = q.basis(int(2**N), 1)*(q.basis(int(2**N), 1)).dag()
-lamb = 0.5 
+lamb = 1
 d0 = lamb*d01 + (1-lamb)*d02
 tlist = np.linspace(0, 5, 100)
 

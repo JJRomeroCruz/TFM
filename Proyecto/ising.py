@@ -31,6 +31,7 @@ def ising(params, N):
     suma = 0
     for i in range(len(spin_z)):
         list_J.append((np.sqrt(gam)/2)*(spin_x[i] - 1.j*spin_y[i]))
+        #list_J.append((np.sqrt(gam)/2)*(spin_x[i] + 1.j*spin_y[i]))
         for j in range(len(spin_z)):
             if(i < j):
                 suma += (spin_z[i]*spin_z[j])/(np.abs(i-j)**a)

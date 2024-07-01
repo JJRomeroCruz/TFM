@@ -46,15 +46,9 @@ for i in range(X.shape[0]):
         
         
 fig1, ax2 = plt.subplots(layout='constrained')
-#CS = ax2.contourf(X, Y, Z, 10, cmap=plt.cm.bone)
+
 # Antes he usado viridis
 CS = ax2.contourf(X, Y, Z, 10, cmap = 'inferno')
-# Note that in the following, we explicitly pass in a subset of the contour
-# levels used for the filled contours.  Alternatively, we could pass in
-# additional levels to provide extra resolution, or leave out the *levels*
-# keyword argument to use all of the original levels.
-
-#CS2 = ax2.contour(CS, levels=CS.levels[::2], colors='r')
 
 ax2.set_title(r'$a = 1$')
 ax2.set_xlabel(r'$V / \gamma$')
@@ -63,6 +57,6 @@ ax2.set_ylabel(r'$\Omega / \gamma$')
 # Make a colorbar for the ContourSet returned by the contourf call.
 cbar = fig1.colorbar(CS)
 cbar.ax.set_ylabel('Área')
-# Add the contour line levels to the colorbar
-#cbar.add_lines(CS2)     
+
+# Add the contour line levels to the colorbar 
 plt.savefig('Fig_4a_Ising_a1.png')
